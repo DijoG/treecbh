@@ -47,7 +47,7 @@ CC <- function(cc_function, cc_dir) {
 #' https://github.com/GreKro/cloudcompare and modified.
 #' @param LAS_char string, path to las file including the name of las file
 #' @param ourput_dir path to output directory
-#' @params global_shift...no_timestamp CloudCompare parameters: https://www.cloudcompare.org/doc/wiki/index.php/Command_line_mode
+#' @param global_shift...no_timestamp CloudCompare parameters: https://www.cloudcompare.org/doc/wiki/index.php/Command_line_mode
 #' @return las file
 #' @export
 cc_TREEiso <- function(LAS_char,

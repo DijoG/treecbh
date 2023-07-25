@@ -11,7 +11,7 @@ plot_CROSS(las, col = "grey25", ylab, cross_WIDTH = 5)
 
 \item{col}{character, color of points, default = "grey25"}
 
-\item{cross_WIDTH}{numeric, width of cross-section (m), default = 5}
+\item{cross_WIDTH}{numeric, width of cross-section (m, default = 5)}
 }
 \value{
 displays ggplot

@@ -1,6 +1,6 @@
 ## REQUIRED packages
 
-tidyverse, sf, data.table, crayon, factoextra, fpc, geometry
+tidyverse, lidR, sf, data.table, crayon, factoextra, fpc, geometry
 
 ## INSTALLATION
 

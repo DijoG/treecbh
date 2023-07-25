@@ -48,13 +48,13 @@ get_CBH(
 
 \item{outdir2}{string, path to output directory of filtered segments (intermediate_segs and final_segs)}
 
+\item{K1, L1, DEC_R1}{first stage cut-pursuit parameters (treeiso), default values as indicated}
+
+\item{VER_O_W, RHO}{final stage treeiso parameters, default values as indicated}
+
 \item{ret}{whether return output tibble or not (default = TRUE)}
 
-\item{K1...L1...DEC_R1}{first stage cut-pursuit parameters (treeiso), default values as indicated}
-
-\item{K2...L2...MAX_GAP...DEC_R2}{second stage cut-pursuit parameters (treeiso), default values as indicated}
-
-\item{VER_O_W...RHO}{final stage treeiso parameters, default values as indicated}
+\item{K2-L2, MAX_GAP, DEC_R2}{second stage cut-pursuit parameters (treeiso), default values as indicated}
 }
 \value{
 tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)

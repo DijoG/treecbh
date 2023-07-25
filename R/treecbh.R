@@ -422,7 +422,7 @@ get_CROSS <- function(las, cross_WIDTH = 5) {
 }
 
 #' Function for 2D kernel method including the decision scheme, used in get_CBH().
-#' @param hist_DAT centered bins of counts on the output by	the vertical cross-sectional K-means clustering stage
+#' @param hist_DAT centered bins of counts on the output by	the vertical cross-sectional K-means clustering
 #' @return numeric value of CBH
 #' @export
 get_CANOPYBH <- function(hist_DAT) {
@@ -645,9 +645,9 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param method character, optinal additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
 #' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
-#' @param K1...L1...DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
-#' @param K2...L2...MAX_GAP...DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
-#' @param VER_O_W...RHO final stage treeiso parameters, default values as indicated
+#' @param K1,L1,DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
+#' @param K2-L2,MAX_GAP,DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
+#' @param VER_O_W,RHO final stage treeiso parameters, default values as indicated
 #' @param ret whether return output tibble or not (default = TRUE)
 #' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
 #' @export

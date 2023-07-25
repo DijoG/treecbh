@@ -30,7 +30,7 @@ get_CBH(
 \arguments{
 \item{list_LAS_char}{character, list of las files}
 
-\item{min_RANGE}{numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation, default = 5}
+\item{min_RANGE}{numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation}
 
 \item{min_H_scale}{numeric, height scaler (m, default = .13), controlling understory removal}
 
@@ -38,7 +38,7 @@ get_CBH(
 
 \item{cross_WIDTH}{numeric, width of cross-section (m, default = 5)}
 
-\item{ONLY}{logical, whether to execute treeiso or not (default = FALSE)}
+\item{ONLY}{logical, whether execute treeiso or not (default = FALSE)}
 
 \item{kM}{logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)}
 
@@ -48,7 +48,7 @@ get_CBH(
 
 \item{outdir2}{string, path to output directory of filtered segments (intermediate_segs and final_segs)}
 
-\item{ret}{whetehr to return output tibble or not (default = TRUE)}
+\item{ret}{whether return output tibble or not (default = TRUE)}
 
 \item{K1...L1...DEC_R1}{first stage cut-pursuit parameters (treeiso), default values as indicated}
 

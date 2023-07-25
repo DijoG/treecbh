@@ -636,7 +636,7 @@ get_CANOPYBH <- function(hist_DAT) {
 
 #' MAIN FUNCTION of treecbh, detecting CBH and deriving numerous metrics.
 #' @param list_LAS_char character, list of las files
-#' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation, default = 5
+#' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.5), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)

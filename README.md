@@ -2,6 +2,6 @@
 
 tidyverse, sf, data.table, crayon, factoextra, fpc, geometry
 
-## INSTALLATIAON
+## INSTALLATION
 
 devtools::install_github("DijoG/treecbh")

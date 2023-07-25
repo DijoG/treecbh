@@ -2,8 +2,6 @@
 
 tidyverse, sf, data.table, crayon, factoextra, fpc, geometry
 
-## INSTALL
+## INSTALLATIAON
 
-Sys.setenv(R_REMOTES_STANDALONE = "true")
-#
-devtools::install_github("DijoG/TREETOPS", build = F)
+devtools::install_github("DijoG/treecbh")

@@ -640,7 +640,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.5), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
-#' @param ONLY logical, whether to execute treeiso or not (default = FALSE)
+#' @param ONLY logical, whether execute treeiso or not (default = FALSE)
 #' @param kM logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
 #' @param method character, optinal additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
@@ -648,26 +648,27 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param K1...L1...DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
 #' @param K2...L2...MAX_GAP...DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
 #' @param VER_O_W...RHO final stage treeiso parameters, default values as indicated
-#' @param ret whetehr to return output tibble or not (default = TRUE)
+#' @param ret whether return output tibble or not (default = TRUE)
 #' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
 #' @export
-get_CBH <- function(list_LAS_char,                                  # List of las files (character)
-                    min_RANGE = 5,                                  # Minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation
-                    min_H_scale = .13,                              # Minimum height scaler (m, default = .13), controlling understory removal
-                    branch_WIDTH = .5,                              # Assumed CBH branch width (m, default = .5), controlling bin width for counting points
-                    cross_WIDTH = 5,                                # Vertical cross section width (m, default = 5)
-                    ONLY = FALSE,                                   # Whether to perform treeiso or not (TRUE executes only CBH)
-                    kM = FALSE,                                     # Interactice K-means cluster k tuning, activated if 'kM' = TRUE
+get_CBH <- function(list_LAS_char,
+                    min_RANGE = 5,
+                    min_H_scale = .13,
+                    branch_WIDTH = .5,
+                    cross_WIDTH = 5,
+                    ONLY = FALSE,
+                    kM = FALSE,
+                    # Interactice K-means cluster k tuning, activated if 'kM' = TRUE
                     # predicted k will be shown (plot), 'Do you accept k?'
                     # if you enter: "y", "Y", "yes", "YES", "ye", "YE" ~ accepted
                     # if you enter anything else:
                     # 'Enter k:' will ask you for a number to provide for k
-                    method = NULL,                                  # Additional attribute
-                    outdir1,                                        # Output directory of treeiso segment results
-                    outdir2,                                        # Output directory of filtered segments (intermediate_segs and final_segs)
-                    K1 = 10, L1 = 1, DEC_R1 = .1,                   # First stage cut-pursuit parameters
-                    K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,    # Second stage cut-pursuit parameters
-                    VER_O_W = .3, RHO = .5,                         # Final stage
+                    method = NULL,
+                    outdir1,
+                    outdir2,
+                    K1 = 10, L1 = 1, DEC_R1 = .1,
+                    K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,
+                    VER_O_W = .3, RHO = .5,
                     ret = T) {                                      # Whether to return output tibble or not
 
 
@@ -888,7 +889,7 @@ get_CBH <- function(list_LAS_char,                                  # List of la
 
   message(crayon::green(str_c("_______ Done ________")))
   return(metrics)
-}                                  # Wether to return (ret = TRUE, default = FALSE) output tibble
+}
 
 #' Function for 2D cross-sectional plot.
 #' @param las las file

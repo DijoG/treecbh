@@ -47,7 +47,7 @@ CC <- function(cc_function, cc_dir) {
 #' https://github.com/GreKro/cloudcompare and modified.
 #' @param LAS_char string, path to las file including the name of las file
 #' @param ourput_dir path to output directory
-#' @params global_shift...no_timestamp CloudCompare parameters: https://www.cloudcompare.org/doc/wiki/index.php/Command_line_mode
+#' @param global_shift...no_timestamp CloudCompare parameters: https://www.cloudcompare.org/doc/wiki/index.php/Command_line_mode
 #' @return las file
 #' @export
 cc_TREEiso <- function(LAS_char,
@@ -635,7 +635,20 @@ get_CANOPYBH <- function(hist_DAT) {
 }
 
 #' MAIN FUNCTION of treecbh, detecting CBH and deriving numerous metrics.
-#' @param etc. see function
+#' @param list_LAS_char character, list of las files
+#' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation, default = 5
+#' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
+#' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.5), controlling bin width for counting points
+#' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
+#' @param ONLY logical, whether to execute treeiso or not (default = FALSE)
+#' @param kM logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
+#' @param method character, optinal additional attribute (default = NULL)
+#' @param outdir1 string, path to output directory of treeiso segment results
+#' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
+#' @param K1...L1...DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
+#' @param K2...L2...MAX_GAP...DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
+#' @param VER_O_W...RHO final stage treeiso parameters, default values as indicated
+#' @param ret whetehr to return output tibble or not (default = TRUE)
 #' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
 #' @export
 get_CBH <- function(list_LAS_char,                                  # List of las files (character)
@@ -643,7 +656,7 @@ get_CBH <- function(list_LAS_char,                                  # List of la
                     min_H_scale = .13,                              # Minimum height scaler (m, default = .13), controlling understory removal
                     branch_WIDTH = .5,                              # Assumed CBH branch width (m, default = .5), controlling bin width for counting points
                     cross_WIDTH = 5,                                # Vertical cross section width (m, default = 5)
-                    ONLY = FALSE,                                   # Whether to perform TREEiso or not (TRUE executes only CBH)
+                    ONLY = FALSE,                                   # Whether to perform treeiso or not (TRUE executes only CBH)
                     kM = FALSE,                                     # Interactice K-means cluster k tuning, activated if 'kM' = TRUE
                     # predicted k will be shown (plot), 'Do you accept k?'
                     # if you enter: "y", "Y", "yes", "YES", "ye", "YE" ~ accepted
@@ -655,7 +668,7 @@ get_CBH <- function(list_LAS_char,                                  # List of la
                     K1 = 10, L1 = 1, DEC_R1 = .1,                   # First stage cut-pursuit parameters
                     K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,    # Second stage cut-pursuit parameters
                     VER_O_W = .3, RHO = .5,                         # Final stage
-                    ret = F) {                                      # Whether
+                    ret = T) {                                      # Whether to return output tibble or not
 
 
   #> Possible errors >
@@ -880,7 +893,7 @@ get_CBH <- function(list_LAS_char,                                  # List of la
 #' Function for 2D cross-sectional plot.
 #' @param las las file
 #' @param col character, color of points, default = "grey25"
-#' @param cross_WIDTH numeric, width of cross-section (m), default = 5
+#' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
 #' @return displays ggplot
 #' @export
 plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {

@@ -24,11 +24,37 @@ get_CBH(
   DEC_R2 = 0.1,
   VER_O_W = 0.3,
   RHO = 0.5,
-  ret = F
+  ret = T
 )
 }
 \arguments{
-\item{etc.}{see function}
+\item{list_LAS_char}{character, list of las files}
+
+\item{min_RANGE}{numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation, default = 5}
+
+\item{min_H_scale}{numeric, height scaler (m, default = .13), controlling understory removal}
+
+\item{branch_WIDTH}{numeric, assumed CBH branch width (m, default = 0.5), controlling bin width for counting points}
+
+\item{cross_WIDTH}{numeric, width of cross-section (m, default = 5)}
+
+\item{ONLY}{logical, whether to execute treeiso or not (default = FALSE)}
+
+\item{kM}{logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)}
+
+\item{method}{character, optinal additional attribute (default = NULL)}
+
+\item{outdir1}{string, path to output directory of treeiso segment results}
+
+\item{outdir2}{string, path to output directory of filtered segments (intermediate_segs and final_segs)}
+
+\item{ret}{whetehr to return output tibble or not (default = TRUE)}
+
+\item{K1...L1...DEC_R1}{first stage cut-pursuit parameters (treeiso), default values as indicated}
+
+\item{K2...L2...MAX_GAP...DEC_R2}{second stage cut-pursuit parameters (treeiso), default values as indicated}
+
+\item{VER_O_W...RHO}{final stage treeiso parameters, default values as indicated}
 }
 \value{
 tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)

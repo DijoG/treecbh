@@ -7,7 +7,7 @@
 get_CANOPYBH(hist_DAT)
 }
 \arguments{
-\item{hist_DAT}{centered bins of counts on the output by    the vertical cross-sectional K-means clustering stage}
+\item{hist_DAT}{centered bins of counts on the output by    the vertical cross-sectional K-means clustering}
 }
 \value{
 numeric value of CBH

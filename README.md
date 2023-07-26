@@ -26,7 +26,7 @@ Apoly <- sf::st_read("<file.shp>")
 # Extracting point clouds to individual tree segments
 Aits <- treecbh::get_3DTREE(Alas, Apoly, "Species")
 
-# If needed, pint cloud files can be saved
+# If needed, point cloud files can be saved
 for (i in 1:length(Aits)) {
   setwd("<path to directory>")
   writeLAS(Aits[[i]], str_c("A_0", i, ".las"))

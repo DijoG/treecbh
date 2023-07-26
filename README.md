@@ -16,8 +16,8 @@ devtools::install_github("DijoG/treecbh")
 #>>>>>> Data preparation
 
 # Forest point cloud
-Alas <- readLAS("<file.las>") %>%
-  normalize_height(., tin())
+Alas <- lidR::readLAS("<file.las>") %>%
+  lidR::normalize_height(., tin())
   
 # Individual tree segments
 Apoly <- sf::st_read("<file.shp>") 
@@ -28,7 +28,7 @@ Aits <- treecbh::get_3DTREE(Alas, Apoly, "Species")
 # If needed, point cloud files can be saved
 for (i in 1:length(Aits)) {
   setwd("<path to directory>")
-  writeLAS(Aits[[i]], str_c("A_0", i, ".las"))
+  lidR::writeLAS(Aits[[i]], str_c("A_0", i, ".las"))
 }
 
 #>>>>>> CBH detection

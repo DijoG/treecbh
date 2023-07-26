@@ -13,8 +13,7 @@ devtools::install_github("DijoG/treecbh")
 ### Example
 
 ```r
-#>>>>>>
-#>>>>>>
+#>>>>>> Data preparation
 
 # Forest point cloud
 Alas <- readLAS("<file.las>") %>%

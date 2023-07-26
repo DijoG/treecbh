@@ -41,24 +41,22 @@ outdi1 <- "<path to directory>"
 outdi2 <- "<path to directory>"
 cc_dir <- "<path to /CloudCompare.exe>"
 
-A_CBH <- get_CBH(Aits,
-                 outdir1 = outdi1,
-                 outdir2 = outdi2,
-                 branch_WIDTH = .2,
-                 cc_dir = cc_dir)
+A_CBH <- treecbh::get_CBH(Aits,
+                          outdir1 = outdi1,
+                          outdir2 = outdi2,
+                          cc_dir = cc_dir)
                  
 #>>> 2> Optimization activated
 # Run after executing #>>> 1>
 
-A_OCBH <- get_CBH(Aits,
-                  outdir1 = outdi1,
-                  outdir2 = outdi2,
-                  branch_WIDTH = .2,
-                  # Activator:
-                  kM = T,  
-                  # Disabling treeiso:
-                  ONLY = T,
-                  cc_dir = cc_dir)
+A_OCBH <- treecbh::get_CBH(Aits,
+                           outdir1 = outdi1,
+                           outdir2 = outdi2,
+                           # Activator:
+                           kM = T,  
+                           # Disabling treeiso:
+                           ONLY = T,
+                           cc_dir = cc_dir)
 ```
 
 

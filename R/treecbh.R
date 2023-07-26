@@ -636,7 +636,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param list_LAS_char character, list of las files
 #' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
-#' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.5), controlling bin width for counting points
+#' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
 #' @param ONLY logical, whether disable treeiso or not (default = FALSE, meaning tree isolation is enabled)
 #' @param kM logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
@@ -652,7 +652,7 @@ get_CANOPYBH <- function(hist_DAT) {
 get_CBH <- function(list_LAS_char,
                     min_RANGE = 5,
                     min_H_scale = .13,
-                    branch_WIDTH = .5,
+                    branch_WIDTH = .2,
                     cross_WIDTH = 5,
                     ONLY = FALSE,
                     kM = FALSE,

@@ -8,7 +8,7 @@ get_CBH(
   list_LAS_char,
   min_RANGE = 5,
   min_H_scale = 0.13,
-  branch_WIDTH = 0.5,
+  branch_WIDTH = 0.2,
   cross_WIDTH = 5,
   ONLY = FALSE,
   kM = FALSE,
@@ -34,7 +34,7 @@ get_CBH(
 
 \item{min_H_scale}{numeric, height scaler (m, default = .13), controlling understory removal}
 
-\item{branch_WIDTH}{numeric, assumed CBH branch width (m, default = 0.5), controlling bin width for counting points}
+\item{branch_WIDTH}{numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points}
 
 \item{cross_WIDTH}{numeric, width of cross-section (m, default = 5)}
 

@@ -24,7 +24,7 @@ get_CBH(
   DEC_R2 = 0.1,
   VER_O_W = 0.3,
   RHO = 0.5,
-  ret = T
+  cc_dir
 )
 }
 \arguments{
@@ -38,7 +38,7 @@ get_CBH(
 
 \item{cross_WIDTH}{numeric, width of cross-section (m, default = 5)}
 
-\item{ONLY}{logical, whether execute treeiso or not (default = FALSE)}
+\item{ONLY}{logical, whether disable treeiso or not (default = FALSE, meaning tree isolation is enabled)}
 
 \item{kM}{logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)}
 
@@ -52,7 +52,7 @@ get_CBH(
 
 \item{VER_O_W, RHO}{final stage treeiso parameters, default values as indicated}
 
-\item{ret}{whether return output tibble or not (default = TRUE)}
+\item{cc_dir}{string, path to CloudCompare.exe}
 
 \item{K2-L2, MAX_GAP, DEC_R2}{second stage cut-pursuit parameters (treeiso), default values as indicated}
 }

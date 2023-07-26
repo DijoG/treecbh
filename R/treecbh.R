@@ -131,7 +131,8 @@ cc_TREEiso <- function(LAS_char,
 #' @param outdir1 string, path to output directory of tree isolation (treeiso) segments
 #' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
 #' @param min_RANGE numeric, minimum height range (m) of 3D tree segment employed during the process of within-segment tree isolation, default = 5
-#' @param etc. see function get_CBH()
+#' @param K1,L1,DEC_R1,K2,L2,MAX_GAP,DEC_R2,VER_O_W,RHO see function get_CBH()
+#' @param cc_dir string, path to CloudCompare.exe
 #' @return las file
 #' @export
 get_SEG <- function(list_LAS_char,
@@ -141,8 +142,7 @@ get_SEG <- function(list_LAS_char,
                     K1 = 10, L1 = 1, DEC_R1 = .1,                   # First stage cut-pursuit parameters (treeiso)
                     K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,    # Second stage cut-pursuit parameters (treeiso)
                     VER_O_W = .3, RHO = .5,                         # Final stage (treeiso)
-                    CC_dir = "",
-                    ret = T) {
+                    cc_dir) {
 
   laso = list()
   for (tree in 1:length(list_LAS_char)) {
@@ -152,7 +152,8 @@ get_SEG <- function(list_LAS_char,
                   K1 = K1, L1 = L1, DEC_R1 = DEC_R1,
                   K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
                   VER_O_W = VER_O_W, RHO = RHO,
-                  output_dir = str_c(outdir1, basename(list_LAS_char[tree]))))
+                  output_dir = str_c(outdir1, basename(list_LAS_char[tree]))),
+       cc_dir = cc_dir)
 
     las = readLAS(str_c(outdir1, basename(list_LAS_char[tree])))
 
@@ -404,9 +405,6 @@ get_SEG <- function(list_LAS_char,
     }
   }
   message(crayon::silver(str_c("_______ Done ________")))
-  if (ret) {
-    return(laso)
-  }
 }
 
 #' Function for getting 2D cross-section from 3D point cloud, used in get_CBH().
@@ -640,7 +638,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.5), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
-#' @param ONLY logical, whether execute treeiso or not (default = FALSE)
+#' @param ONLY logical, whether disable treeiso or not (default = FALSE, meaning tree isolation is enabled)
 #' @param kM logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
 #' @param method character, optinal additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
@@ -648,7 +646,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param K1,L1,DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
 #' @param K2-L2,MAX_GAP,DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
 #' @param VER_O_W,RHO final stage treeiso parameters, default values as indicated
-#' @param ret whether return output tibble or not (default = TRUE)
+#' @param cc_dir string, path to CloudCompare.exe
 #' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
 #' @export
 get_CBH <- function(list_LAS_char,
@@ -669,7 +667,7 @@ get_CBH <- function(list_LAS_char,
                     K1 = 10, L1 = 1, DEC_R1 = .1,
                     K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,
                     VER_O_W = .3, RHO = .5,
-                    ret = T) {                                      # Whether to return output tibble or not
+                    cc_dir) {
 
 
   #> Possible errors >
@@ -719,7 +717,7 @@ get_CBH <- function(list_LAS_char,
             K1 = K1, L1 = L1, DEC_R1 = DEC_R1,
             K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
             VER_O_W = VER_O_W, RHO = RHO,
-            ret = ret)
+            cc_dir = cc_dir)
   }
 
   list_LASS = list.files(outdir2, pattern = ".las", full.names = T) %>%

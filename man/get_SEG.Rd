@@ -20,8 +20,7 @@ get_SEG(
   DEC_R2 = 0.1,
   VER_O_W = 0.3,
   RHO = 0.5,
-  CC_dir = "",
-  ret = T
+  cc_dir
 )
 }
 \arguments{
@@ -33,7 +32,9 @@ get_SEG(
 
 \item{min_RANGE}{numeric, minimum height range (m) of 3D tree segment employed during the process of within-segment tree isolation, default = 5}
 
-\item{etc.}{see function get_CBH()}
+\item{K1, L1, DEC_R1, K2, L2, MAX_GAP, DEC_R2, VER_O_W, RHO}{see function get_CBH()}
+
+\item{cc_dir}{string, path to CloudCompare.exe}
 }
 \value{
 las file

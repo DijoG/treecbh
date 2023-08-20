@@ -19,22 +19,23 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = T, FEATURE) {
         classify_ground(., csf) %>%
         normalize_height(., knnidw()) %>%
         filter_poi(., Z > 0)
-    }
-    ZZ = llas[[i]]@data %>%
-      filter(Classification == 2) %>%
-      pull(Z)
-    lground[[i]] = tibble(minZ = min(ZZ),
-                          maxZ = max(ZZ),
-                          meanZ = mean(ZZ))
-    llas[[i]]@data =
-      llas[[i]]@data %>%
-      mutate(Zn = Z - lground[[i]]$meanZ) %>%
-      filter(Zn >= 0) %>%
-      filter(Classification != 2) %>%
-      mutate(NEW = multiPOLY[i, ] %>%
-               pull(rlang::quo_squash(FEATURE)))
-    colnames(llas[[i]]@data) = str_replace(colnames(llas[[i]]@data), "NEW", rlang::quo_squash(FEATURE))
+    } else {
+      ZZ = llas[[i]]@data %>%
+        filter(Classification == 2) %>%
+        pull(Z)
+      lground[[i]] = tibble(minZ = min(ZZ),
+                            maxZ = max(ZZ),
+                            meanZ = mean(ZZ))
+      llas[[i]]@data =
+        llas[[i]]@data %>%
+        mutate(Zn = Z - lground[[i]]$meanZ) %>%
+        filter(Zn >= 0) %>%
+        filter(Classification != 2) %>%
+        mutate(NEW = multiPOLY[i, ] %>%
+                 pull(rlang::quo_squash(FEATURE)))
+      colnames(llas[[i]]@data) = str_replace(colnames(llas[[i]]@data), "NEW", rlang::quo_squash(FEATURE))
 
+    }
   }
   return(llas)
 }

@@ -661,7 +661,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
-#' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are activ)
+#' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are active)
 #' @param kM logical, interactive K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
 #' @param method character, optional additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
@@ -988,17 +988,16 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
   if (missing(full.grid))
     full.grid = FALSE
   data = check$data
-  data[, `:=`(X = Rfast::Round(X/res_VOXEL) * res_VOXEL, Y = Rfast::Round(Y/res_VOXEL) *
-                res_VOXEL, Z = Rfast::Round(Z/res_VOXEL) * res_VOXEL)]
-  data = unique(data[, `:=`(npts, .N), by = .(X, Y, Z)])
+  data[, ':='(X = Rfast::Round(X/res_VOXEL) * res_VOXEL,
+              Y = Rfast::Round(Y/res_VOXEL) *res_VOXEL,
+              Z = Rfast::Round(Z/res_VOXEL) * res_VOXEL)]
+  data = unique(data[, ':='(npts, .N), by = .(X, Y, Z)])
   if (full.grid) {
     x_seq = seq(min(data$X), max(data$X), res_VOXEL)
     y_seq = seq(min(data$Y), max(data$Y), res_VOXEL)
     z_seq = seq(min(data$Z), max(data$Z), res_VOXEL)
     est_weight = round(length(x_seq) * length(y_seq) * length(z_seq) *
-                         4 * 8/2^{
-                           20
-                         }/1024, 1)
+                         4 * 8/2^{20}/1024, 1)
     if (est_weight > 2) {
       cat(paste("Final data is estimated to be ", est_weight,
                 "GB in size. Continue execution ? y or n"))
@@ -1010,10 +1009,10 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
     empty = data.table::data.table(expand.grid(x_seq, y_seq,
                                                z_seq))
     data.table::setnames(empty, c("X", "Y", "Z"))
-    empty[, `:=`(npts, 0)]
+    empty[, ':='(npts, 0)]
     data = dplyr::bind_rows(data, empty)
-    data = data[, c(`:=`(npts, sum(npts)),
-                    `:=`(Intensity, mean(Intensity))), keyby = .(X, Y, Z)]
+    data = data[, c(':='(npts, sum(npts)),
+                    ':='(Intensity, mean(Intensity))), keyby = .(X, Y, Z)]
   }
   if (check$dfr)
     data = as.data.frame(data)

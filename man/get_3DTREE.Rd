@@ -4,7 +4,7 @@
 \alias{get_3DTREE}
 \title{Function for extraction point clouds to individual tree segments.}
 \usage{
-get_3DTREE(lasFILE, multiPOLY, normalize = TRUE, FEATURE)
+get_3DTREE(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE)
 }
 \arguments{
 \item{lasFILE}{las file of forest}
@@ -12,6 +12,8 @@ get_3DTREE(lasFILE, multiPOLY, normalize = TRUE, FEATURE)
 \item{multiPOLY}{sf multipolygon, individual tree segments}
 
 \item{normalize}{logical, normalization based on CSF-classified ground points using the lidR::knnidw(), if FALSE "flat normalization" is performed}
+
+\item{output_dir}{string, path to output directory}
 
 \item{FEATURE}{character, attribute name to extract from multiPOLY}
 }

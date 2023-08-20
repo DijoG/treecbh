@@ -2,10 +2,11 @@
 #' @param lasFILE las file of forest
 #' @param multiPOLY sf multipolygon, individual tree segments
 #' @param normalize logical, normalization based on CSF-classified ground points using the lidR::knnidw(), if FALSE "flat normalization" is performed
+#' @param output_dir string, path to output directory
 #' @param FEATURE character, attribute name to extract from multiPOLY
 #' @return list of las files (point clouds of individual tree segments)
 #' @export
-get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, FEATURE) {
+get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE) {
 
   llas <- list()
   lground <- list()
@@ -37,6 +38,8 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, FEATURE) {
       colnames(llas[[i]]@data) = str_replace(colnames(llas[[i]]@data), "NEW", rlang::quo_squash(FEATURE))
 
     }
+    setwd(output_dir)
+    writeLAS(llas[[i]], str_c("tree_0", i, ".las"))
   }
   return(llas)
 }
@@ -57,7 +60,7 @@ CC <- function(cc_function, cc_dir) {
 #' Function for grabbing treeiso plug-in employed in CloudCompare, used in CC(), taken from:
 #' https://github.com/GreKro/cloudcompare and modified.
 #' @param LAS_char string, path to las file including the name of las file
-#' @param ourput_dir path to output directory
+#' @param output_dir string, path to output directory
 #' @param global_shift...no_timestamp CloudCompare parameters: https://www.cloudcompare.org/doc/wiki/index.php/Command_line_mode
 #' @return las file
 #' @export

@@ -161,13 +161,6 @@ get_SEG <- function(list_LAS_char,
                     VER_O_W = .3, RHO = .5,                         # Final stage (treeiso)
                     cc_dir) {
 
-  if (str_sub(outdir1, nchar(outdir1), nchar(outdir1)) != "/") {
-    outdir1 = str_c(outdir1, "/")
-  }
-  if (str_sub(outdir2, nchar(outdir2), nchar(outdir2)) != "/") {
-    outdir2 = str_c(outdir2, "/")
-  }
-
   laso = list()
   for (tree in 1:length(list_LAS_char)) {
     message(crayon::silver(str_c("_______", tree, "________\n")))
@@ -730,6 +723,14 @@ get_CBH <- function(list_LAS_char,
   }
   if (RHO < 0 | RHO > 2) {
     stop(crayon::magenta("Parameter 'RHO' accepts values btw. 0 and 2"))
+  }
+
+  #> outdir strings
+  if (str_sub(outdir1, nchar(outdir1), nchar(outdir1)) != "/") {
+    outdir1 = str_c(outdir1, "/")
+  }
+  if (str_sub(outdir2, nchar(outdir2), nchar(outdir2)) != "/") {
+    outdir2 = str_c(outdir2, "/")
   }
 
   #> ensure order

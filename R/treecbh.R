@@ -1022,6 +1022,7 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
 }
 #'
 #' Function for checking input data used in get_VOXEL().
+#' @importFrom data.table
 #' @param data data.table, tibble, data.frame  as las@data
 #' @param message logical, if TRUE error and interactive messages are enabled
 #' @return data table

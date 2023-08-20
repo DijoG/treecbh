@@ -42,7 +42,7 @@ get_CBH(
 
 \item{kM}{logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)}
 
-\item{method}{character, optinal additional attribute (default = NULL)}
+\item{method}{character, optional additional attribute (default = NULL)}
 
 \item{outdir1}{string, path to output directory of treeiso segment results}
 

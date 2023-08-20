@@ -5,7 +5,7 @@
 #' @param FEATURE character, attribute name to extract from multiPOLY
 #' @return list of las files (point clouds of individual tree segments)
 #' @export
-get_3DTREE <- function(lasFILE, multiPOLY, normalize = T, FEATURE) {
+get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, FEATURE) {
 
   llas <- list()
   lground <- list()

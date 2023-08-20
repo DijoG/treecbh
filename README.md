@@ -22,7 +22,7 @@ Alas <- lidR::readLAS("<file.las>")
 Apoly <- sf::st_read("<file.shp>") 
 
 # Extracting point clouds to individual tree segments, saving files
-oudir <- "<path to directory>""
+oudir <- "<path to directory>"
 treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "Species")
 
 #>>>>>> CBH detection

@@ -732,9 +732,10 @@ get_CBH <- function(list_LAS_char,
     stop(crayon::magenta("Parameter 'RHO' accepts values btw. 0 and 2"))
   }
 
-  list_LAS_char = gtools::mixedsort(list_LAS_char)
   if (ONLY == FALSE) {
     #> 3D tree decomposition (segmentation) >
+    #> ensure order
+    list_LAS_char = gtools::mixedsort(list_LAS_char)
     get_SEG(list_LAS_char,
             outdir1,
             outdir2,

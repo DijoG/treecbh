@@ -1,16 +1,25 @@
 #' Function for extraction point clouds to individual tree segments.
 #' @param lasFILE las file of forest
 #' @param multiPOLY sf multipolygon, individual tree segments
+#' @param normalize logical, normalization based on CSF-classified ground points using the lidR::knnidw(), if FALSE "flat normalization" is performed
 #' @param FEATURE character, attribute name to extract from multiPOLY
 #' @return list of las files (point clouds of individual tree segments)
 #' @export
-get_3DTREE <- function(lasFILE, multiPOLY, FEATURE) {
+get_3DTREE <- function(lasFILE, multiPOLY, normalize = T, FEATURE) {
 
   llas <- list()
   lground <- list()
 
   for (i in 1:(multiPOLY %>% nrow)) {
     llas[[i]] = clip_roi(lasFILE, multiPOLY[i,])
+    if (normalize) {
+      csf = csf(sloop_smooth = TRUE, class_threshold = 1, cloth_resolution = 1, time_step = 1)
+      llas[[i]] %>%
+        filter_duplicates(.) %>%
+        classify_ground(., csf) %>%
+        normalize_height(., knnidw()) %>%
+        filter_poi(., Z > 0)
+    }
     ZZ = llas[[i]]@data %>%
       filter(Classification == 2) %>%
       pull(Z)

@@ -952,7 +952,7 @@ plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {
 #' @export
 get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
   X = Y = Z = npts = .N = . = ":=" = NULL
-  if (!data.table::is.data.table(data)) {
+  if (!(data.table::is.data.table(data))) {
     data = data.table::data.table(data)
   }
   check = check_DAT(data, message = message)

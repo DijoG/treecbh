@@ -38,7 +38,7 @@ get_CBH(
 
 \item{cross_WIDTH}{numeric, width of cross-section (m, default = 5)}
 
-\item{cbh_ONLY}{numeric, execute: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are activ)}
+\item{cbh_ONLY}{numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are activ)}
 
 \item{kM}{logical, interactive K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)}
 

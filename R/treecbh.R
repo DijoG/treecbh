@@ -966,7 +966,7 @@ plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {
 #' @return data table
 #' @export
 get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
-  X = Y = Z = npts = .N = . = ":=" = NULL
+  X = Y = Z = npts = .N = . = `:=` = NULL
   if (!(data.table::is.data.table(data))) {
     data = data.table::data.table(data)
   }
@@ -989,10 +989,10 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
   if (missing(full.grid))
     full.grid = FALSE
   data = check$data
-  data[, ':='(X = Rfast::Round(X/res_VOXEL) * res_VOXEL,
+  data[, `:=`(X = Rfast::Round(X/res_VOXEL) * res_VOXEL,
               Y = Rfast::Round(Y/res_VOXEL) * res_VOXEL,
               Z = Rfast::Round(Z/res_VOXEL) * res_VOXEL)]
-  data = unique(data[, ':='(npts, .N), by = .(X, Y, Z)])
+  data = unique(data[, `:=`(npts, .N), by = .(X, Y, Z)])
   if (full.grid) {
     x_seq = seq(min(data$X), max(data$X), res_VOXEL)
     y_seq = seq(min(data$Y), max(data$Y), res_VOXEL)
@@ -1011,10 +1011,10 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
                                                y_seq,
                                                z_seq))
     data.table::setnames(empty, c("X", "Y", "Z"))
-    empty[, ':='(npts, 0)]
+    empty[, `:=`(npts, 0)]
     data = dplyr::bind_rows(data, empty)
-    data = data[, c(':='(npts, sum(npts)),
-                    ':='(Intensity, mean(Intensity))), keyby = .(X, Y, Z)]
+    data = data[, c(`:=`(npts, sum(npts)),
+                    `:=`(Intensity, mean(Intensity))), keyby = .(X, Y, Z)]
   }
   if (check$dfr)
     data = as.data.frame(data)

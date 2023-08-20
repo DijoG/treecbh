@@ -958,7 +958,7 @@ plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {
 #' https://doi.org/10.1093/aob/mcx095
 #'
 #' Function for voxelizing point cloud.
-#' @importFrom data.table ":=" NULL
+#' @importFrom data.table ":="
 #' @param data data.table, tibble, data.frame  as las@data
 #' @param res_VOXEL numeric, voxel resolution
 #' @param full.grid logical, if TRUE empty voxels in the tree bounding box are returned
@@ -1022,7 +1022,6 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
 }
 #'
 #' Function for checking input data used in get_VOXEL().
-#' @import data.table
 #' @param data data.table, tibble, data.frame  as las@data
 #' @param message logical, if TRUE error and interactive messages are enabled
 #' @return data table

@@ -12,11 +12,11 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, FEATURE) {
 
   for (i in 1:(multiPOLY %>% nrow)) {
     llas[[i]] = clip_roi(lasFILE, multiPOLY[i,])
-    if (normalize == TRUE) {
-      csf = csf(sloop_smooth = TRUE, class_threshold = 1, cloth_resolution = 1, time_step = 1)
+    if (normalize) {
+      incsf = csf(sloop_smooth = TRUE, class_threshold = 1, cloth_resolution = 1, time_step = 1)
       llas[[i]] %>%
         filter_duplicates(.) %>%
-        classify_ground(., csf) %>%
+        classify_ground(., incsf) %>%
         normalize_height(., knnidw()) %>%
         filter_poi(., Z > 0)
     } else {

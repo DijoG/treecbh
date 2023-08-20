@@ -16,31 +16,26 @@ devtools::install_github("DijoG/treecbh")
 #>>>>>> Data preparation
 
 # Forest point cloud
-Alas <- lidR::readLAS("<file.las>") %>%
-  lidR::normalize_height(., tin())
+Alas <- lidR::readLAS("<file.las>") 
   
 # Individual tree segments
 Apoly <- sf::st_read("<file.shp>") 
 
 # Extracting point clouds to individual tree segments
-Aits <- treecbh::get_3DTREE(Alas, Apoly, "Species")
-
-# If needed, point cloud files can be saved
-for (i in 1:length(Aits)) {
-  setwd("<path to directory>")
-  lidR::writeLAS(Aits[[i]], str_c("A_0", i, ".las"))
-}
+oudir <- <path to directory>
+treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "Species")
 
 #>>>>>> CBH detection
 #>>> 1> Optimization deactivated (default)
 
 ?treecbh::get_CBH()
 
+its_l <- list.files(oudir, pattern = ".las", full.names = T)
 outdi1 <- "<path to directory>"
 outdi2 <- "<path to directory>"
 cc_dir <- "<path to /CloudCompare.exe>"
 
-A_CBH <- treecbh::get_CBH(Aits,
+A_CBH <- treecbh::get_CBH(its_l,
                           outdir1 = outdi1,
                           outdir2 = outdi2,
                           cc_dir = cc_dir)
@@ -48,7 +43,7 @@ A_CBH <- treecbh::get_CBH(Aits,
 #>>> 2> Optimization activated
 # Run after executing #>>> 1>
 
-A_OCBH <- treecbh::get_CBH(Aits,
+A_OCBH <- treecbh::get_CBH(its_l,
                            outdir1 = outdi1,
                            outdir2 = outdi2,
                            # Activator:

@@ -48,12 +48,10 @@ A_CBH <- treecbh::get_CBH(its_l,
 A_OCBH <- treecbh::get_CBH(its_l,
                            outdir1 = outdi1,
                            outdir2 = outdi2,
-                           # run only cbh detection
+                           # run only cbh detection (disabling treeiso)
                            cbh_ONLY = 3,
                            # Activator:
                            kM = T,  
-                           # Disabling treeiso:
-                           ONLY = T,
                            cc_dir = cc_dir)
 ```
 

@@ -1,3 +1,9 @@
+#' Function for stopping a program without error message.
+stop_noerr <- function() {
+  noerr = options(show.error.messages = FALSE)
+  on.exit(options(noerr))
+  stop()
+}
 #' Function for extraction point clouds to individual tree segments.
 #' @param lasFILE las file of forest
 #' @param multiPOLY sf multipolygon, individual tree segments
@@ -747,7 +753,8 @@ get_CBH <- function(list_LAS_char,
             VER_O_W = VER_O_W, RHO = RHO,
             cc_dir = cc_dir)
     if (cbh_ONLY == 2) {
-      stop(message(crayon::green(str_c("_______ Done ________"))))
+      message(crayon::green(str_c("_______ Done ________")))
+      stop_noerr()
     }
   }
 

@@ -959,6 +959,7 @@ plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {
 #'
 #' Function for voxelizing point cloud.
 #' @param data data.table, tibble, data.frame  as las@data
+#' @importFrom data.table ":=" NULL
 #' @param res_VOXEL numeric, voxel resolution
 #' @param full.grid logical, if TRUE empty voxels in the tree bounding box are returned
 #' @param message logical, if TRUE error and interactive messages are enabled
@@ -989,7 +990,7 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
     full.grid = FALSE
   data = check$data
   data[, ':='(X = Rfast::Round(X/res_VOXEL) * res_VOXEL,
-              Y = Rfast::Round(Y/res_VOXEL) *res_VOXEL,
+              Y = Rfast::Round(Y/res_VOXEL) * res_VOXEL,
               Z = Rfast::Round(Z/res_VOXEL) * res_VOXEL)]
   data = unique(data[, ':='(npts, .N), by = .(X, Y, Z)])
   if (full.grid) {
@@ -1006,7 +1007,8 @@ get_VOXEL <- function (data, res_VOXEL, full.grid, message) {
         stop("Execution stoped.")
       }
     }
-    empty = data.table::data.table(expand.grid(x_seq, y_seq,
+    empty = data.table::data.table(expand.grid(x_seq,
+                                               y_seq,
                                                z_seq))
     data.table::setnames(empty, c("X", "Y", "Z"))
     empty[, ':='(npts, 0)]

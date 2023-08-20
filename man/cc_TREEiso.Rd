@@ -30,7 +30,7 @@ cc_TREEiso(
 \arguments{
 \item{LAS_char}{string, path to las file including the name of las file}
 
-\item{ourput_dir}{path to output directory}
+\item{output_dir}{string, path to output directory}
 
 \item{global_shift...no_timestamp}{CloudCompare parameters: https://www.cloudcompare.org/doc/wiki/index.php/Command_line_mode}
 }

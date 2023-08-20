@@ -703,6 +703,9 @@ get_CBH <- function(list_LAS_char,
   if (cross_WIDTH < 4) {
     stop(crayon::magenta("Parameter 'cross_WIDTH' must be minimum 4"))
   }
+  if (!cbh_ONLY %in% 1:3) {
+    stop(crayon::magenta("Parameter 'cbh_ONLY' accepts 1, 2 and 3"))
+  }
   if (K1 < 3 | K1 > 50) {
     stop(crayon::magenta("Parameter 'K1' accepts values btw. 3 and 50"))
   }

@@ -3,7 +3,7 @@
 #' @param multiPOLY sf multipolygon, individual tree segments
 #' @param normalize logical, normalization based on CSF-classified ground points using the lidR::knnidw(), if FALSE "flat normalization" is performed
 #' @param output_dir string, path to output directory
-#' @param FEATURE character, attribute name to extract from multiPOLY
+#' @param FEATURE character, attribute name to extract from multiPOLY to store in las
 #' @return list of las files (point clouds of individual tree segments)
 #' @export
 get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE) {
@@ -32,12 +32,15 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE
         llas[[i]]@data %>%
         mutate(Zn = Z - lground[[i]]$meanZ) %>%
         filter(Zn >= 0) %>%
-        filter(Classification != 2) %>%
-        mutate(NEW = multiPOLY[i, ] %>%
-                 pull(rlang::quo_squash(FEATURE)))
-      colnames(llas[[i]]@data) = str_replace(colnames(llas[[i]]@data), "NEW", rlang::quo_squash(FEATURE))
-
+        filter(Classification != 2)
     }
+    llas[[i]]@data =
+      llas[[i]]@data %>%
+      mutate(NEW = multiPOLY[i, ] %>%
+               pull(rlang::quo_squash(FEATURE)))
+    colnames(llas[[i]]@data) = str_replace(colnames(llas[[i]]@data), "NEW", rlang::quo_squash(FEATURE))
+
+    #> write out its las
     setwd(output_dir)
     writeLAS(llas[[i]], str_c("tree_0", i, ".las"))
   }

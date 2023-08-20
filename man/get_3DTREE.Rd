@@ -15,7 +15,7 @@ get_3DTREE(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE)
 
 \item{output_dir}{string, path to output directory}
 
-\item{FEATURE}{character, attribute name to extract from multiPOLY}
+\item{FEATURE}{character, attribute name to extract from multiPOLY to store in las}
 }
 \value{
 list of las files (point clouds of individual tree segments)

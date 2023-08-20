@@ -40,7 +40,7 @@ get_CBH(
 
 \item{ONLY}{logical, whether disable treeiso or not (default = FALSE, meaning tree isolation is enabled)}
 
-\item{kM}{logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)}
+\item{kM}{logical, interactive K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)}
 
 \item{method}{character, optional additional attribute (default = NULL)}
 

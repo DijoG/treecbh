@@ -660,7 +660,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
 #' @param ONLY logical, whether disable treeiso or not (default = FALSE, meaning tree isolation is enabled)
-#' @param kM logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
+#' @param kM logical, interactive K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
 #' @param method character, optional additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
 #' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)

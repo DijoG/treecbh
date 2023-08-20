@@ -18,15 +18,15 @@ devtools::install_github("DijoG/treecbh")
 # Forest point cloud
 Alas <- lidR::readLAS("<file.las>") 
   
-# Individual tree segments
+# Individual tree segments (its)
 Apoly <- sf::st_read("<file.shp>") 
 
-# Extracting point clouds to individual tree segments, saving files
+# Extracting point clouds to its, saving las files
 oudir <- "<path to directory>"
 treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "Species")
 
 #>>>>>> CBH detection
-#>>> 1> Optimization deactivated (default)
+#>>> 1> Optimization deactivated (treeiso plus cbh detection)
 
 ?treecbh::get_CBH()
 
@@ -38,21 +38,32 @@ cc_dir <- "<path to /CloudCompare.exe>"
 A_CBH <- treecbh::get_CBH(its_l,
                           # run tree isolation and cbh detection
                           cbh_ONLY = 1,
+                          # its point cloud directory
                           outdir1 = outdi1,
+                          # point cloud segments (stem plus first leaved branch) directory 
                           outdir2 = outdi2,
                           cc_dir = cc_dir)
                  
-#>>> 2> Optimization activated
-# Run after executing #>>> 1>
+#>>> 2> Optimization deactivated (treeiso only)
 
-A_OCBH <- treecbh::get_CBH(its_l,
-                           outdir1 = outdi1,
-                           outdir2 = outdi2,
-                           # run only cbh detection (disabling treeiso)
-                           cbh_ONLY = 3,
-                           # Activator:
-                           kM = T,  
-                           cc_dir = cc_dir)
+treecbh::get_CBH(its_l,
+                 outdir1 = outdi1,
+                 outdir2 = outdi2,
+                 # run only tree isolation (disabling cbh detection)
+                 cbh_ONLY = 2,
+                 cc_dir = cc_dir) 
+                           
+#>>> 3> Optimization activated (cbh only)
+# Run after executing #>>> 1> or >>> 2>, ideally after >>> 2>
+
+O_CBH <- treecbh::get_CBH(its_l,
+                          outdir1 = outdi1,
+                          outdir2 = outdi2,
+                          # run only cbh detection (disabling treeiso)
+                          cbh_ONLY = 3,
+                          # Activator:
+                          kM = T,  
+                          cc_dir = cc_dir)
 ```
 
 

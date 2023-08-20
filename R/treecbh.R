@@ -14,7 +14,8 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, FEATURE) {
     llas[[i]] = clip_roi(lasFILE, multiPOLY[i,])
     if (normalize) {
       incsf = csf(sloop_smooth = TRUE, class_threshold = 1, cloth_resolution = 1, time_step = 1)
-      llas[[i]] %>%
+      llas[[i]] =
+        llas[[i]] %>%
         filter_duplicates(.) %>%
         classify_ground(., incsf) %>%
         normalize_height(., knnidw()) %>%

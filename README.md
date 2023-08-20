@@ -36,6 +36,8 @@ outdi2 <- "<path to directory>"
 cc_dir <- "<path to /CloudCompare.exe>"
 
 A_CBH <- treecbh::get_CBH(its_l,
+                          # run tree isolation and cbh detection
+                          cbh_ONLY = 1,
                           outdir1 = outdi1,
                           outdir2 = outdi2,
                           cc_dir = cc_dir)
@@ -46,6 +48,8 @@ A_CBH <- treecbh::get_CBH(its_l,
 A_OCBH <- treecbh::get_CBH(its_l,
                            outdir1 = outdi1,
                            outdir2 = outdi2,
+                           # run only cbh detection
+                           cbh_ONLY = 3,
                            # Activator:
                            kM = T,  
                            # Disabling treeiso:

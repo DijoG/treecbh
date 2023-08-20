@@ -655,7 +655,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
-#' @param ONLY logical, whether disable treeiso or not (default = FALSE, meaning tree isolation is enabled)
+#' @param cbh_ONLY numeric, 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are activ)
 #' @param kM logical, interactive K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
 #' @param method character, optional additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
@@ -671,7 +671,7 @@ get_CBH <- function(list_LAS_char,
                     min_H_scale = .13,
                     branch_WIDTH = .2,
                     cross_WIDTH = 5,
-                    ONLY = FALSE,
+                    cbh_ONLY = 1,
                     kM = FALSE,
                     # Interactive K-means cluster k tuning, activated if 'kM' = TRUE
                     # predicted k will be shown (plot), 'Do you accept k?'
@@ -736,7 +736,7 @@ get_CBH <- function(list_LAS_char,
   #> ensure order
   list_LAS_char = gtools::mixedsort(list_LAS_char)
 
-  if (ONLY == FALSE) {
+  if (cbh_ONLY %in% 1:2) {
     #> 3D tree decomposition (segmentation) >
     get_SEG(list_LAS_char,
             outdir1,
@@ -746,175 +746,180 @@ get_CBH <- function(list_LAS_char,
             K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
             VER_O_W = VER_O_W, RHO = RHO,
             cc_dir = cc_dir)
+    if (cbh_ONLY == 2) {
+      stop(message(crayon::green(str_c("_______ Done ________"))))
+    }
   }
 
-  list_LASS = list.files(outdir2, pattern = ".las", full.names = T) %>%
-    gtools::mixedsort()
+  if (cbh_ONLY %in% c(1,3)) {
 
-  need = map_chr(list_LAS_char, ~str_split_1(.x, "/")[str_split_1(outdir2, "/") %>% length])
-  list_LASS = list_LASS[grep(str_c(need, collapse = "|"), list_LASS)]
+    list_LASS = list.files(outdir2, pattern = ".las", full.names = T) %>%
+      gtools::mixedsort()
 
-  metrics = list()
-  for (tree in 1:length(list_LASS)) {
-    message(crayon::green(str_c("_______", basename(list_LASS)[tree], "________")))
+    need = map_chr(list_LAS_char, ~str_split_1(.x, "/")[str_split_1(outdir2, "/") %>% length])
+    list_LASS = list_LASS[grep(str_c(need, collapse = "|"), list_LASS)]
 
-    #> Original las >
-    laso = readLAS(list_LAS_char[tree])
+    metrics = list()
+    for (tree in 1:length(list_LASS)) {
+      message(crayon::green(str_c("_______", basename(list_LASS)[tree], "________")))
 
-    #> Segmented las >
-    lass = readLAS(list_LASS[tree])
+      #> Original las >
+      laso = readLAS(list_LAS_char[tree])
 
-    #> min H ~ segmented las >
-    m_H = (lass@data$Z %>% quantile(., .1) %>% as.vector) ^min_H_scale *2
+      #> Segmented las >
+      lass = readLAS(list_LASS[tree])
 
-    #> Horizontal cross section ~ segmented las >
-    crosss = get_CROSS(lass, cross_WIDTH = cross_WIDTH)
+      #> min H ~ segmented las >
+      m_H = (lass@data$Z %>% quantile(., .1) %>% as.vector) ^min_H_scale *2
 
-    #> Denstiy (height ~ Z) on original las >
-    dens =
-      laso@data %>%
-      ggplot(aes(y = Z)) +
-      geom_histogram(binwidth = .2, center = 1)
-    dat_dens =
-      ggplot_build(dens)
-    dat_dens =
-      dat_dens[[1]][[1]]
+      #> Horizontal cross section ~ segmented las >
+      crosss = get_CROSS(lass, cross_WIDTH = cross_WIDTH)
 
-    #> Removing ground points (again, just in case) and preparing segmented data for clustering >
-    df = crosss@data %>%
-      select(X, Z) %>%
-      filter(Z > .2)
+      #> Denstiy (height ~ Z) on original las >
+      dens =
+        laso@data %>%
+        ggplot(aes(y = Z)) +
+        geom_histogram(binwidth = .2, center = 1)
+      dat_dens =
+        ggplot_build(dens)
+      dat_dens =
+        dat_dens[[1]][[1]]
 
-    #> K-means clustering
-    #> Prediction strength of a clustering:
-    #> Tibshirani, R. and Walther, G. (2005) Cluster Validation by Prediction Strength, Journal of Computational and Graphical Statistics, 14, 511-528.
-    set.seed(123)
-    opk = fpc::prediction.strength(scale(df), 2, 10, 30)
-    opkk = map_dbl(opk$predcorr, ~mean(.x)) %>% replace_na(., 0.1)
-    k = ifelse(nrow(df) < 460, 1, ifelse(df$Z %>% min > 4, which.max(opkk) + 1, which.max(opkk)))
-    k = ifelse(nrow(df) > 5000, which.max(opkk) + 2, k)
-    k = ifelse(nrow(df) > 9000, 1, k)
+      #> Removing ground points (again, just in case) and preparing segmented data for clustering >
+      df = crosss@data %>%
+        select(X, Z) %>%
+        filter(Z > .2)
 
-    km = kmeans(scale(df), k, nstart = 25)
-    if (ONLY) {
-      if (kM == FALSE) {
-        k = k
-      } else {
-        kmp = factoextra::fviz_cluster(km, data = df,
-                                       palette = c("steelblue", "gold", "limegreen","grey","deeppink","forestgreen","grey45","steelblue","yellow"),
-                                       geom = "point",
-                                       ellipse.type = "convex",
-                                       ggtheme = theme_bw()) +
-          scale_y_continuous(breaks = NULL) +
-          scale_x_continuous(breaks = NULL) +
-          theme(axis.title.x = element_blank(),
-                axis.text.x = element_blank(),
-                plot.title = element_blank(),
-                axis.ticks = element_blank(),
-                axis.text.y = element_blank(),
-                axis.title.y = element_blank(),
-                legend.title = element_blank(),
-                legend.position = c(.9,.25),
-                legend.background = element_rect(fill = "transparent"))
-        print(kmp)
-        message(crayon::green(str_c("Suggested k is ", k, ".")))
-        kM_ = readline(prompt = "Do you accept k? ")
-        if (kM_ %in% c("y", "Y", "yes", "YES", "ye", "YE")) {
-          km = km
+      #> K-means clustering
+      #> Prediction strength of a clustering:
+      #> Tibshirani, R. and Walther, G. (2005) Cluster Validation by Prediction Strength, Journal of Computational and Graphical Statistics, 14, 511-528.
+      set.seed(123)
+      opk = fpc::prediction.strength(scale(df), 2, 10, 30)
+      opkk = map_dbl(opk$predcorr, ~mean(.x)) %>% replace_na(., 0.1)
+      k = ifelse(nrow(df) < 460, 1, ifelse(df$Z %>% min > 4, which.max(opkk) + 1, which.max(opkk)))
+      k = ifelse(nrow(df) > 5000, which.max(opkk) + 2, k)
+      k = ifelse(nrow(df) > 9000, 1, k)
+
+      km = kmeans(scale(df), k, nstart = 25)
+      if (ONLY) {
+        if (kM == FALSE) {
+          k = k
         } else {
-          kM__ = readline(prompt = "Enter k: ")
-          kM__ = as.double(kM__)
-          #> Update K-means >
-          km = kmeans(scale(df), kM__, nstart = 25)
+          kmp = factoextra::fviz_cluster(km, data = df,
+                                         palette = c("steelblue", "gold", "limegreen","grey","deeppink","forestgreen","grey45","steelblue","yellow"),
+                                         geom = "point",
+                                         ellipse.type = "convex",
+                                         ggtheme = theme_bw()) +
+            scale_y_continuous(breaks = NULL) +
+            scale_x_continuous(breaks = NULL) +
+            theme(axis.title.x = element_blank(),
+                  axis.text.x = element_blank(),
+                  plot.title = element_blank(),
+                  axis.ticks = element_blank(),
+                  axis.text.y = element_blank(),
+                  axis.title.y = element_blank(),
+                  legend.title = element_blank(),
+                  legend.position = c(.9,.25),
+                  legend.background = element_rect(fill = "transparent"))
+          print(kmp)
+          message(crayon::green(str_c("Suggested k is ", k, ".")))
+          kM_ = readline(prompt = "Do you accept k? ")
+          if (kM_ %in% c("y", "Y", "yes", "YES", "ye", "YE")) {
+            km = km
+          } else {
+            kM__ = readline(prompt = "Enter k: ")
+            kM__ = as.double(kM__)
+            #> Update K-means >
+            km = kmeans(scale(df), kM__, nstart = 25)
+          }
         }
       }
+
+      dfk =
+        df %>%
+        mutate(km = km$cluster)
+
+      dfkm =
+        dfk %>% group_by(km) %>%
+        summarise(mZ = mean(Z)) %>%
+        bind_cols(km$centers)
+
+      dfkk =
+        dfk %>%
+        filter(km == dfkm[which.min(dfkm$mZ),]$km)
+
+      dfk_histo =
+        dfkk %>%
+        ggplot(aes(y = Z)) +
+        geom_histogram(center = T, binwidth = branch_WIDTH) # Example
+      datt_histo =
+        ggplot_build(dfk_histo)
+      datt_histo =
+        datt_histo[[1]][[1]]
+
+      datt_histo =
+        datt_histo %>%
+        filter(y > m_H)
+
+      #> Finding CBH >
+      cbh = get_CANOPYBH(datt_histo)
+
+      #> Canopy ~ original las >
+      newdata =
+        laso@data %>%
+        data.frame() %>%
+        select(X, Y, Z) %>%
+        filter(Z > cbh) %>%
+        as.matrix()
+
+      las_new =
+        laso %>%
+        filter_poi(Z > cbh)
+
+      #> Delaunay hull area >
+      convex_hull =
+        geometry::convhulln(newdata, "FA")
+
+      #> Delaunay hull volume >
+      delaunaj =
+        geometry::delaunayn(newdata, "Fa")
+
+      #> Voxelizing canopy (0.2m) >
+      vmv = get_VOXEL(las_new@data, .2)
+
+      #> Exclude ground and low vegetation from density (height ~ Z) of original las >
+      dat_histos =
+        dat_dens %>%
+        filter(y >= m_H)
+
+      #> Collect metrics >
+      metrics[[tree]] =
+        tibble(
+          Z_max      = laso@data$Z %>% max,
+          Z_mean     = laso@data$Z %>% mean,
+          Z_sd       = laso@data$Z %>% sd,
+          Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
+          N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
+          CBH        = cbh,
+          Hull_area  = convex_hull$area,
+          Del_vol    = delaunaj$areas %>% sum,
+          Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
+          Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
+          treeID     = tree)
     }
 
-    dfk =
-      df %>%
-      mutate(km = km$cluster)
-
-    dfkm =
-      dfk %>% group_by(km) %>%
-      summarise(mZ = mean(Z)) %>%
-      bind_cols(km$centers)
-
-    dfkk =
-      dfk %>%
-      filter(km == dfkm[which.min(dfkm$mZ),]$km)
-
-    dfk_histo =
-      dfkk %>%
-      ggplot(aes(y = Z)) +
-      geom_histogram(center = T, binwidth = branch_WIDTH) # Example
-    datt_histo =
-      ggplot_build(dfk_histo)
-    datt_histo =
-      datt_histo[[1]][[1]]
-
-    datt_histo =
-      datt_histo %>%
-      filter(y > m_H)
-
-    #> Finding CBH >
-    cbh = get_CANOPYBH(datt_histo)
-
-    #> Canopy ~ original las >
-    newdata =
-      laso@data %>%
-      data.frame() %>%
-      select(X, Y, Z) %>%
-      filter(Z > cbh) %>%
-      as.matrix()
-
-    las_new =
-      laso %>%
-      filter_poi(Z > cbh)
-
-    #> Delaunay hull area >
-    convex_hull =
-      geometry::convhulln(newdata, "FA")
-
-    #> Delaunay hull volume >
-    delaunaj =
-      geometry::delaunayn(newdata, "Fa")
-
-    #> Voxelizing canopy (0.2m) >
-    vmv = get_VOXEL(las_new@data, .2)
-
-    #> Exclude ground and low vegetation from density (height ~ Z) of original las >
-    dat_histos =
-      dat_dens %>%
-      filter(y >= m_H)
-
-    #> Collect metrics >
-    metrics[[tree]] =
-      tibble(
-        Z_max      = laso@data$Z %>% max,
-        Z_mean     = laso@data$Z %>% mean,
-        Z_sd       = laso@data$Z %>% sd,
-        Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
-        N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
-        CBH        = cbh,
-        Hull_area  = convex_hull$area,
-        Del_vol    = delaunaj$areas %>% sum,
-        Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
-        Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
-        treeID     = tree)
-  }
-
-  metrics =
-    metrics %>%
-    bind_rows()
-
-  if (!is.null(method)) {
     metrics =
       metrics %>%
-      mutate(method = method)
-  }
+      bind_rows()
 
-  message(crayon::green(str_c("_______ Done ________")))
-  return(metrics)
+    if (!is.null(method)) {
+      metrics =
+        metrics %>%
+        mutate(method = method)
+    }
+    message(crayon::green(str_c("_______ Done ________")))
+    return(metrics)
+  }
 }
 
 #' Function for 2D cross-sectional plot.

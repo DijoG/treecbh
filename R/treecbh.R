@@ -640,7 +640,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
 #' @param ONLY logical, whether disable treeiso or not (default = FALSE, meaning tree isolation is enabled)
 #' @param kM logical, interactice K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
-#' @param method character, optinal additional attribute (default = NULL)
+#' @param method character, optional additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
 #' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
 #' @param K1,L1,DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
@@ -656,7 +656,7 @@ get_CBH <- function(list_LAS_char,
                     cross_WIDTH = 5,
                     ONLY = FALSE,
                     kM = FALSE,
-                    # Interactice K-means cluster k tuning, activated if 'kM' = TRUE
+                    # Interactive K-means cluster k tuning, activated if 'kM' = TRUE
                     # predicted k will be shown (plot), 'Do you accept k?'
                     # if you enter: "y", "Y", "yes", "YES", "ye", "YE" ~ accepted
                     # if you enter anything else:

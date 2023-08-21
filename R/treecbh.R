@@ -154,6 +154,7 @@ cc_TREEiso <- function(LAS_char,
 #' @param outdir1 string, path to output directory of tree isolation (treeiso) segments
 #' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
 #' @param min_RANGE numeric, minimum height range (m) of 3D tree segment employed during the process of within-segment tree isolation, default = 5
+#' @param min_POINT numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)
 #' @param K1,L1,DEC_R1,K2,L2,MAX_GAP,DEC_R2,VER_O_W,RHO see function get_CBH()
 #' @param cc_dir string, path to CloudCompare.exe
 #' @return las file
@@ -162,6 +163,7 @@ get_SEG <- function(list_LAS_char,
                     outdir1,
                     outdir2,
                     min_RANGE = 5,
+                    min_POINT = 0.2,
                     K1 = 10, L1 = 1, DEC_R1 = .1,                   # First stage cut-pursuit parameters (treeiso)
                     K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,    # Second stage cut-pursuit parameters (treeiso)
                     VER_O_W = .3, RHO = .5,                         # Final stage (treeiso)
@@ -183,7 +185,7 @@ get_SEG <- function(list_LAS_char,
     #> Remove points below 0.2 >
     lasl =
       las %>%
-      filter_poi(., Z > .2)
+      filter_poi(., Z > min_POINT)
 
     #> Calculate min_Z and range_Z >
     m =
@@ -658,6 +660,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' MAIN FUNCTION of treecbh, detecting CBH and deriving numerous metrics.
 #' @param list_LAS_char character, list of las files
 #' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation
+#' @param min_POINT numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
@@ -674,6 +677,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @export
 get_CBH <- function(list_LAS_char,
                     min_RANGE = 5,
+                    min_POINT .2,
                     min_H_scale = .13,
                     branch_WIDTH = .2,
                     cross_WIDTH = 5,
@@ -751,6 +755,7 @@ get_CBH <- function(list_LAS_char,
             outdir1,
             outdir2,
             min_RANGE = min_RANGE,
+            min_POINT = min_POINT,
             K1 = K1, L1 = L1, DEC_R1 = DEC_R1,
             K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
             VER_O_W = VER_O_W, RHO = RHO,
@@ -798,7 +803,7 @@ get_CBH <- function(list_LAS_char,
       #> Removing ground points (again, just in case) and preparing segmented data for clustering >
       df = crosss@data %>%
         select(X, Z) %>%
-        filter(Z > .2)
+        filter(Z > min_POINT)
 
       #> K-means clustering
       #> Prediction strength of a clustering:

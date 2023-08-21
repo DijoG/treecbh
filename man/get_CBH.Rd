@@ -7,6 +7,7 @@
 get_CBH(
   list_LAS_char,
   min_RANGE = 5,
+  min_POINT = 0.2,
   min_H_scale = 0.13,
   branch_WIDTH = 0.2,
   cross_WIDTH = 5,
@@ -31,6 +32,8 @@ get_CBH(
 \item{list_LAS_char}{character, list of las files}
 
 \item{min_RANGE}{numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation}
+
+\item{min_POINT}{numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)}
 
 \item{min_H_scale}{numeric, height scaler (m, default = .13), controlling understory removal}
 

@@ -11,6 +11,7 @@ get_SEG(
   outdir1,
   outdir2,
   min_RANGE = 5,
+  min_POINT = 0.2,
   K1 = 10,
   L1 = 1,
   DEC_R1 = 0.1,
@@ -31,6 +32,8 @@ get_SEG(
 \item{outdir2}{string, path to output directory of filtered segments (intermediate_segs and final_segs)}
 
 \item{min_RANGE}{numeric, minimum height range (m) of 3D tree segment employed during the process of within-segment tree isolation, default = 5}
+
+\item{min_POINT}{numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)}
 
 \item{K1, L1, DEC_R1, K2, L2, MAX_GAP, DEC_R2, VER_O_W, RHO}{see function get_CBH()}
 

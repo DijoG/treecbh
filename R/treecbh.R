@@ -163,7 +163,7 @@ get_SEG <- function(list_LAS_char,
                     outdir1,
                     outdir2,
                     min_RANGE = 5,
-                    min_POINT = 0.2,
+                    min_POINT = .2,
                     K1 = 10, L1 = 1, DEC_R1 = .1,                   # First stage cut-pursuit parameters (treeiso)
                     K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,    # Second stage cut-pursuit parameters (treeiso)
                     VER_O_W = .3, RHO = .5,                         # Final stage (treeiso)
@@ -677,7 +677,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @export
 get_CBH <- function(list_LAS_char,
                     min_RANGE = 5,
-                    min_POINT .2,
+                    min_POINT = .2,
                     min_H_scale = .13,
                     branch_WIDTH = .2,
                     cross_WIDTH = 5,

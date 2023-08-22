@@ -34,17 +34,19 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE
       lground[[i]] = tibble(minZ = min(ZZ),
                             maxZ = max(ZZ),
                             meanZ = mean(ZZ))
-      llas[[i]]@data =
-        llas[[i]]@data %>%
-        mutate(Zn = Z - lground[[i]]$meanZ) %>%
-        filter(Zn >= 0) %>%
-        filter(Classification != 2)
+      llas[[i]] = add_lasattribute(llas[[i]],
+                                   llas[[i]]@data %>%
+                                     mutate(Zn = Z - lground[[i]]$meanZ),
+                                   name = "Zn",
+                                   desc = "Zn") %>%
+        filter_poi(., Zn >= 0) %>%
+        filter_poi(., Classification != 2)
     }
-    llas[[i]]@data =
-      llas[[i]]@data %>%
-      mutate(NEW = multiPOLY[i, ] %>%
-               pull(rlang::quo_squash(FEATURE)))
-    colnames(llas[[i]]@data) = str_replace(colnames(llas[[i]]@data), "NEW", rlang::quo_squash(FEATURE))
+    llas[[i]] = add_lasattribute(llas[[i]],
+                                 multiPOLY[i, ] %>%
+                                   pull(rlang::quo_squash(FEATURE)),
+                                 name = rlang::quo_squash(FEATURE),
+                                 desc = rlang::quo_squash(FEATURE))
 
     #> write out its las
     setwd(output_dir)

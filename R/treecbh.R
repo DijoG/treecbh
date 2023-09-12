@@ -42,7 +42,7 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE
         filter_poi(., Zn >= 0) %>%
         filter_poi(., Classification != 2)
     }
-    if (FEATURE) {
+    if (!is.null(FEATURE)) {
       llas[[i]] = add_lasattribute(llas[[i]],
                                    multiPOLY[i, ] %>%
                                      pull(rlang::quo_squash(FEATURE)),

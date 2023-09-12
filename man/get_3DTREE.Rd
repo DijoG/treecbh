@@ -4,7 +4,7 @@
 \alias{get_3DTREE}
 \title{Function for extraction point clouds to individual tree segments.}
 \usage{
-get_3DTREE(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE)
+get_3DTREE(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE = NULL)
 }
 \arguments{
 \item{lasFILE}{las file of forest}
@@ -15,7 +15,7 @@ get_3DTREE(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE)
 
 \item{output_dir}{string, path to output directory}
 
-\item{FEATURE}{character, attribute name to extract from multiPOLY to store in las}
+\item{FEATURE}{character, attribute name and it values (can only be numeric!) to extract from multiPOLY to store in las header}
 }
 \value{
 list of las files (point clouds of individual tree segments)

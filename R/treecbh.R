@@ -924,7 +924,8 @@ get_CBH <- function(list_LAS_char,
           Del_vol    = delaunaj$areas %>% sum,
           Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
           Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
-          treeID     = tree)
+          treeID     = str_remove(basename(list_LASS)[tree], ".las") %>%
+            str_remove(., "tree_"))
     }
 
     metrics =

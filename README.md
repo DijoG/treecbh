@@ -1,7 +1,9 @@
 # treecbh 
-=====================================================================================================================
+==========
 
 The treecbh package provides functions to detect individual tree level Canopy Base Height (CBH) using high-resolution LiDAR data. Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the lidR package. 
+
+==========
 
 
 ### Required packages
@@ -71,7 +73,7 @@ Using the Dalponte algorithm.
 algo_crowns <- dalponte2016(CHM, treetops)
 las_crowns <- segment_trees(Alas, algo_crowns, attribute = "ID")
 ```
-las_crowns is a las object storing the ids of individual trees (ID attribute). This object can also be fed into the treecbh::get_CBH() function after storing each individual point cloud (tree) in a directory. Since there are other point- and CHM-based its algorithms outside the liDR framework, trecbh::get_CBH() accepts las files that can be isolated based both on points and CHMs. 
+las_crowns is a las object storing the ids of individual trees (ID attribute). This object can also be fed into the treecbh::get_CBH() function after storing each individual point cloud (tree) in a directory. Since there are other point- and CHM-based its algorithms outside the liDR framework, trecbh::get_CBH() accepts las files that can previosly be isolated based both on points and CHMs. 
 
 Obtaining individual tree segments (its) as polygons.
 ```r

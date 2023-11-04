@@ -1,20 +1,21 @@
 # treecbh 
 =====================================================================================================================
+
 The treecbh package provides functions to detect individual tree level Canopy Base Height (CBH) using high-resolution LiDAR data. Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the lidR package. 
 
 
 ### Required packages
 
-Make sure that the following R packages are installed before using treecbh.
+Make sure that the following R packages are installed before using treecbh:
 
-tidyverse
-lidR
-sf
-data.table
-crayon
-factoextra
-fpc
-geometry
+tidyverse,
+lidR,
+sf,
+data.table,
+crayon,
+factoextra,
+fpc,
+geometry.
 
 
 ### Installation

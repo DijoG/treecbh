@@ -1,7 +1,7 @@
-# treecbh
+# treecbh 
 =====================================================================================================================
-
 The treecbh package provides functions to detect individual tree level Canopy Base Height (CBH) using high-resolution LiDAR data. Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the lidR package. 
+
 
 ### Required packages
 
@@ -16,6 +16,7 @@ factoextra
 fpc
 geometry
 
+
 ### Installation
 ```r
 devtools::install_github("DijoG/treecbh")
@@ -23,6 +24,7 @@ devtools::install_github("DijoG/treecbh")
 
 # Example
 Demonstration of how to use treecbh combined with lidR. 
+
 
 ### Data preparation
 ```r
@@ -39,6 +41,7 @@ bgcol <- function(x)
   return(col(x))
 }
 ```
+
 
 ### Computing canopy height model
 Using the pitfree algorithm.
@@ -67,8 +70,6 @@ Using the Dalponte algorithm.
 algo_crowns <- dalponte2016(CHM, treetops)
 las_crowns <- segment_trees(Alas, algo_crowns, attribute = "ID")
 ```
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_its_treetops.png">
-
 las_crowns is a las object storing the ids of individual trees (ID attribute). This object can also be fed into the treecbh::get_CBH() function after storing each individual point cloud (tree) in a directory. Since there are other point- and CHM-based its algorithms outside the liDR framework, trecbh::get_CBH() accepts las files that can be isolated based both on points and CHMs. 
 
 Obtaining individual tree segments (its) as polygons.
@@ -77,7 +78,9 @@ Apoly <- crown_metrics(las_crowns, attribute = "ID", geom = "concave", func = NU
 plot(sf::st_geometry(Apoly), reset = FALSE, col = "forestgreen", border = "grey80")
 plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 ```
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_its_treetops.png">
 Some trees were not segmented.
+
 
 ### Extracting point clouds to its (classifying ground points and saving las files)
 This step is only necessary if you have different its shape file coming from an outer source.
@@ -85,6 +88,7 @@ This step is only necessary if you have different its shape file coming from an 
 oudir <- "<path to directory>"
 treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID")
 ```
+
 
 ### CBH detection
 Optimization deactivated, performing treeiso plus cbh detection (cbh_ONLY = 1).
@@ -122,6 +126,7 @@ treecbh::get_CBH(its_l,
                  cbh_ONLY = 2,
                  cc_dir = cc_dir)
 ``` 
+
 
 Optimization activated with kM = T, executing cbh only (cbh_ONLY = 3).
 ```r

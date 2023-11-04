@@ -28,11 +28,11 @@ Demonstration of how to use treecbh combined with lidR.
 ```r
 require(lidR);require(tidyverse)
 
-#> Forest point cloud (low resolution example data)
+# Forest point cloud (low resolution example data)
 LAS <- system.file("extdata", "MixedConifer.laz", package = "lidR")
 Alas <- readLAS(LAS, filter = "-drop_z_below 0") 
 
-#> Black, white and green color palette for visualizing CHM
+# Black, white and green color palette for visualizing CHM
 bgcol <- function(x)
 {
   col <- grDevices::colorRampPalette(c("grey1", "white", "forestgreen"))
@@ -41,17 +41,17 @@ bgcol <- function(x)
 ```
 
 ### Computing canopy height model
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/01_chm_pitfree.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/01_chm_pitfree.png">
 ```r
-#> Using the pitfree algorithm
+# Using the pitfree algorithm
 CHM <- rasterize_canopy(Alas, 0.5, pitfree(subcircle = 0.25))
 plot(CHM, main = "CHM 0.5 pitfree", col = bgcol(50))
 ```
 
 ### Computing treetops
-<img align="left" src="https://raw.githubusercontent.com/DijoG/storage/main/README/02_chm_pitfree_treetops.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/02_chm_pitfree_treetops.png">
 ```r
-#> Using a constant windows size of 5 m
+# Using a constant windows size of 5 m
 ws <- 5
 treetops <- locate_trees(CHM, lmf(ws))
 plot(chm, main = "CHM 0.5 pitfree", col = bgcol(50))
@@ -59,16 +59,16 @@ plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 ```
 
 ### Point-based crown segmentation
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_its_treetops.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_its_treetops.png">
 ```r
-#> Using the Dalponte algorithm
+# Using the Dalponte algorithm
 algo_crowns <- dalponte2016(CHM, treetops)
 las_crowns <- segment_trees(Alas, algo_crowns, attribute = "ID")
 ```
 las_crowns is a las object storing the ids of individual trees (ID attribute). This object can also be fed into the treecbh::get_CBH() function after storing each individual point cloud (tree) in a directory. Since there are other point- and CHM-based its algorithms outside the liDR framework, trecbh::get_CBH() accepts las files that can be isolated based both on points and CHMs. 
 
 ```r
-#> Obtaining individual tree segments (its) as polygons
+# Obtaining individual tree segments (its) as polygons
 Apoly <- crown_metrics(las_crowns, attribute = "ID", geom = "concave", func = NULL)
 plot(sf::st_geometry(Apoly), reset = FALSE, col = "forestgreen", border = "grey80")
 plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
@@ -84,7 +84,7 @@ treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID")
 
 ### CBH detection
 Optimization deactivated, performing treeiso plus cbh detection (cbh_ONLY = 1).
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/04_A_CBH.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/04_A_CBH.png">
 ```r
 ?treecbh::get_CBH()
 
@@ -119,7 +119,7 @@ treecbh::get_CBH(its_l,
 ``` 
 
 Optimization activated with kM = T, executing cbh only (cbh_ONLY = 3).
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/05_O_CBH.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/05_O_CBH.png">
 ```r
 O_CBH <- treecbh::get_CBH(its_l,
                           outdir1 = outdi1,

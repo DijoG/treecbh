@@ -94,18 +94,20 @@ treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID")
 
 
 ### CBH detection
-Optimization deactivated, performing treeiso plus cbh detection (cbh_ONLY = 1).
+Optimization deactivated, performing treeiso plus cbh detection (cbh_ONLY = 1). Let's proceed with five trees that have sufficient points.
 ```r
 ?treecbh::get_CBH()
 
 its_l <- list.files(oudit, pattern = ".las", full.names = T) %>%
   gtools::mixedsort()
+# five tree clouds
+las_l <- its_l[c(7,9,72,78,131)]
+
+# output directories
 outdi1 <- "<path to directory>"
 outdi2 <- "<path to directory>"
 cc_dir <- "<path to /CloudCompare.exe>"
 
-#> Let's proceed with five trees that have sufficient points
-las_l <- its_l[c(7,9,72,78,131)]
 A_CBH <- treecbh::get_CBH(las_l,
                           # run tree isolation and cbh detection
                           cbh_ONLY = 1,

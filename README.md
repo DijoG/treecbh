@@ -102,7 +102,11 @@ its_l <- list.files(oudit, pattern = ".las", full.names = T) %>%
   gtools::mixedsort()
 # five tree clouds
 las_l <- its_l[c(7,9,72,78,131)]
+plot(readLAS(las_l[5]), bg = "white", size = 5, axis = T)
+```
+<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/3D_tree_example.png">
 
+```r
 # output directories
 outdi1 <- "<path to directory>"
 outdi2 <- "<path to directory>"
@@ -133,7 +137,9 @@ treecbh::get_CBH(its_l,
 ``` 
 
 
-Optimization activated with kM = T, executing cbh only (cbh_ONLY = 3).
+Optimization activated with kM = T, executing cbh only (cbh_ONLY = 3). The interactive optimization process starts. 
+'Do you accept' k? User answers, if answer is no, 'Enter k:'. 
+<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/sugg_k_no.png">
 ```r
 O_CBH <- treecbh::get_CBH(its_l,
                           outdir1 = outdi1,

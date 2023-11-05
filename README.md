@@ -60,7 +60,7 @@ Using a constant windows size of 5 m.
 ```r
 ws <- 5
 treetops <- locate_trees(CHM, lmf(ws))
-plot(chm, main = "CHM 0.5 pitfree", col = bgcol(50))
+plot(CHM, main = "CHM 0.5 pitfree", col = bgcol(50))
 plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 ```
 

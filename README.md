@@ -118,6 +118,8 @@ plot(readLAS(las_l[5]), bg = "white", size = 5, axis = T)
 # output directories
 outdi1 <- "<path to directory>" # treeiso isolated tree cloud
 outdi2 <- "<path to directory>" # treeiso segmented clouds of tree parts
+
+# CC executable 
 cc_dir <- "<path to /CloudCompare.exe>"
 
 # running 

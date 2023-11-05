@@ -10,10 +10,10 @@ stop_noerr <- function() {
 #' @param normalize logical, normalization based on CSF-classified ground points using the lidR::knnidw(), if FALSE "flat normalization" is performed
 #' @param output_dir string, path to output directory
 #' @param FEATURE character, attribute name and it values (can only be numeric!) to extract from multiPOLY to store in las header
-#' @param return logical, whether to return the list of las or not (default = TRUE)
+#' @param RETURN logical, whether to return the list of las or not (default = TRUE)
 #' @return list of las files (point clouds of individual tree segments)
 #' @export
-get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE = NULL, return = TRUE) {
+get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE = NULL, RETURN = TRUE) {
 
   llas <- list()
   lground <- list()
@@ -56,7 +56,7 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE
     setwd(output_dir)
     writeLAS(llas[[i]], str_c("tree_0", i, ".las"))
   }
-  if (return) {
+  if (RETURN) {
     return(llas)
   } else {
     message(crayon::green(str_c("_______ Done ________")))

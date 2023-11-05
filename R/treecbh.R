@@ -58,6 +58,8 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE
   }
   if (return) {
     return(llas)
+  } else {
+    message(crayon::green(str_c("_______ Done ________")))
   }
 }
 

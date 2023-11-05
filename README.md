@@ -95,7 +95,7 @@ This step is only necessary if you have different its shape file coming from an 
 
 ```r
 oudir <- "<path to directory>"
-treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID")
+treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID", RETURN = F)
 ```
 
 ### CBH detection

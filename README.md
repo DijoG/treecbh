@@ -117,7 +117,7 @@ plot(readLAS(las_l[5]), bg = "white", size = 5, axis = T)
 
 # output directories
 outdi1 <- "<path to directory>" # treeiso isolated tree cloud
-outdi2 <- "<path to directory>" # treeiso segmented clouds of tree parts
+outdi2 <- "<path to directory>" # filtered tree cloud (stem plus first leaved branch)
 
 # CC executable 
 cc_dir <- "<path to /CloudCompare.exe>"
@@ -128,9 +128,8 @@ A_CBH <- treecbh::get_CBH(las_l,
                           cbh_ONLY = 1,
                           # its point cloud directory
                           outdir1 = outdi1,
-                          # point cloud segments (stem plus first leaved branch) directory
+                          # stem plus first leaved branch directory
                           outdir2 = outdi2,
-                          # CC executeable directory
                           cc_dir = cc_dir)
 A_CBH
 ```

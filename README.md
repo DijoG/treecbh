@@ -108,7 +108,7 @@ Optimization deactivated, performing treeiso plus cbh detection (`cbh_ONLY = 1`)
 ?treecbh::get_CBH()
 
 # list of individual las tree clouds and the selection of five
-its_l <- list.files(oudit, pattern = ".las", full.names = T) %>%
+its_l <- list.files(oudir, pattern = ".las", full.names = T) %>%
   gtools::mixedsort()
 las_l <- its_l[c(7,9,72,78,131)]
 

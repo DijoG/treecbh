@@ -1,7 +1,7 @@
 # treecbh 
 ==========
 
-The **treecbh** package provides functions to detect individual tree level Canopy Base Height (CBH) using high-resolution LiDAR data. Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the lidR package. 
+The **treecbh** package provides functions to detect individual tree level Canopy Base Height (CBH) using high-resolution LiDAR data. Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the **lidR** package. 
 
 ==========
 
@@ -25,7 +25,7 @@ devtools::install_github("DijoG/treecbh")
 ```
 
 # Example
-Demonstration of how to use treecbh combined with lidR. 
+Demonstration of how to use **treecbh** combined with **lidR**. 
 
 ### Data preparation
 
@@ -88,7 +88,7 @@ plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 
 Some trees were not segmented.
 
-### Extracting point clouds to its (classifying ground points and saving las files)
+### Extracting point clouds to its (classifying ground points and saving las files by default)
 
 This step is only necessary if you have different its shape file coming from an outer source.
 
@@ -106,19 +106,20 @@ Optimization deactivated, performing treeiso plus cbh detection (`cbh_ONLY = 1`)
 ```r
 ?treecbh::get_CBH()
 
+# list of individual las tree clouds and the selection of five
 its_l <- list.files(oudit, pattern = ".las", full.names = T) %>%
   gtools::mixedsort()
-# five tree clouds
 las_l <- its_l[c(7,9,72,78,131)]
-plot(readLAS(las_l[5]), bg = "white", size = 5, axis = T)
-```
 
-```r
+# visualizing one
+plot(readLAS(las_l[5]), bg = "white", size = 5, axis = T)
+
 # output directories
 outdi1 <- "<path to directory>"
 outdi2 <- "<path to directory>"
 cc_dir <- "<path to /CloudCompare.exe>"
 
+# run
 A_CBH <- treecbh::get_CBH(las_l,
                           # run tree isolation and cbh detection
                           cbh_ONLY = 1,

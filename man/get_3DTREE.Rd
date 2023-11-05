@@ -10,7 +10,7 @@ get_3DTREE(
   normalize = TRUE,
   output_dir,
   FEATURE = NULL,
-  return = TRUE
+  RETURN = TRUE
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ get_3DTREE(
 
 \item{FEATURE}{character, attribute name and it values (can only be numeric!) to extract from multiPOLY to store in las header}
 
-\item{return}{logical, whether to return the list of las or not (default = TRUE)}
+\item{RETURN}{logical, whether to return the list of las or not (default = TRUE)}
 }
 \value{
 list of las files (point clouds of individual tree segments)

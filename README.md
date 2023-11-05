@@ -95,6 +95,7 @@ treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID")
 
 ### CBH detection
 Optimization deactivated, performing treeiso plus cbh detection (cbh_ONLY = 1). Let's proceed with five trees that have sufficient points.
+<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/3D_tree_example.png">
 ```r
 ?treecbh::get_CBH()
 
@@ -104,7 +105,6 @@ its_l <- list.files(oudit, pattern = ".las", full.names = T) %>%
 las_l <- its_l[c(7,9,72,78,131)]
 plot(readLAS(las_l[5]), bg = "white", size = 5, axis = T)
 ```
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/3D_tree_example.png">
 
 ```r
 # output directories

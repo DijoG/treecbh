@@ -16,7 +16,8 @@ data.table,
 crayon,
 factoextra,
 fpc,
-geometry.
+geometry,
+gtools.
 
 ### Installation
 

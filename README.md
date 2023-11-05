@@ -119,7 +119,7 @@ outdi1 <- "<path to directory>"
 outdi2 <- "<path to directory>"
 cc_dir <- "<path to /CloudCompare.exe>"
 
-# run
+# running 
 A_CBH <- treecbh::get_CBH(las_l,
                           # run tree isolation and cbh detection
                           cbh_ONLY = 1,
@@ -127,14 +127,14 @@ A_CBH <- treecbh::get_CBH(las_l,
                           outdir1 = outdi1,
                           # point cloud segments (stem plus first leaved branch) directory
                           outdir2 = outdi2,
-                          # CC executeable diretory
+                          # CC executeable directory
                           cc_dir = cc_dir)
 A_CBH
 ```
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/04_A_CBH.png">
 
-Optimization deactivated, executing treeiso only (`cbh_ONLY = 2`).
+Optimization deactivated, executing **treeiso** only (`cbh_ONLY = 2`).
 
 ```r
 treecbh::get_CBH(its_l,
@@ -145,8 +145,7 @@ treecbh::get_CBH(its_l,
                  cc_dir = cc_dir)
 ``` 
 
-Optimization activated with `kM = T`, executing cbh only (`cbh_ONLY = 3`). The interactive optimization process starts. 
-'Do you accept k?'. User answers, if the answer is no, 'Enter k:'. 
+Optimization activated with `kM = TRUE` (k-Means Clustering set to TRUE), executing cbh only (`cbh_ONLY = 3`). The interactive optimization process starts. 'Do you accept k?'. User answers, if the answer is no, the user is asked to type a number for `k` after 'Enter k:'.
 
 <img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/sugg_k_no.png">
 
@@ -156,8 +155,10 @@ O_CBH <- treecbh::get_CBH(its_l,
                           outdir2 = outdi2,
                           # run only cbh detection (disabling treeiso)
                           cbh_ONLY = 3,
-                          # Activator:
-                          kM = T,
+                          # Optimization activator
+                          # kM = FALSE is default
+                          kM = TRUE,
+                          # inactive CC executeable directory
                           cc_dir = cc_dir)
 O_CBH
 ```

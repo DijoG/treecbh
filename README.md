@@ -146,7 +146,7 @@ treecbh::get_CBH(its_l,
 ``` 
 
 Optimization activated with `kM = T`, executing cbh only (`cbh_ONLY = 3`). The interactive optimization process starts. 
-'Do you accept' k? User answers, if answer is no, 'Enter k:'. 
+'Do you accept k?' User answers, if answer is no, 'Enter k:'. 
 
 <img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/sugg_k_no.png">
 

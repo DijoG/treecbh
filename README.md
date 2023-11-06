@@ -141,10 +141,10 @@ Output parameters:\
 `Z_N_points` → Height of maximum binned count (unit: m),\
 `N_points` → Number of points in the maximum binned count (unit: n),\
 `CBH` → Detected Canopy Base Height (unit: m) → Detected Canopy point cloud,\
-`Hull_area` → Area of Delaunay convex hull of Detected Canopy point cloud (unit: Superscript m^2^),\
-`Del_vol` → Volume of Delaunay convex hull of Detected Canopy point cloud (unit: Superscript m^3^),\
-`Cube_vol` → Volume of voxelized (0.2 m) Detected Canopy point cloud (unit: m^3^),\
-`Sphere_vol` → Volume of in-voxel-fit sphere (diameter 0.2 m) Detected Canopy point cloud (unit: Superscript m^3^),\
+`Hull_area` → Area of Delaunay convex hull of Detected Canopy point cloud (unit: m<sup>2</sup>),\
+`Del_vol` → Volume of Delaunay convex hull of Detected Canopy point cloud (unit: m<sup>3</sup>),\
+`Cube_vol` → Volume of voxelized (0.2 m) Detected Canopy point cloud (unit: m<sup>3</sup>),\
+`Sphere_vol` → Volume of in-voxel-fit sphere (diameter 0.2 m) Detected Canopy point cloud (unit: m<sup>3</sup>),\
 `treeID` → initial individual tree cloud id.
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/04_A_CBH.png">

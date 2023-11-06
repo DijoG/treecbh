@@ -144,7 +144,7 @@ Output parameters:\
 `Hull_area` → Area of Delaunay convex hull of Detected Canopy point cloud (unit: m<sup>2</sup>),\
 `Del_vol` → Volume of Delaunay convex hull of Detected Canopy point cloud (unit: m<sup>3</sup>),\
 `Cube_vol` → Volume of voxelized (0.2 m) Detected Canopy point cloud (unit: m<sup>3</sup>),\
-`Sphere_vol` → Volume of in-voxel-fit sphere (diameter 0.2 m) Detected Canopy point cloud (unit: m<sup>3</sup>),\
+`Sphere_vol` → Volume of in-voxel-fit spheres (diameter 0.2 m) of Detected Canopy point cloud (unit: m<sup>3</sup>),\
 `treeID` → initial individual tree cloud id.
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/04_A_CBH.png">

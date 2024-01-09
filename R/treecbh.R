@@ -826,36 +826,75 @@ get_CBH <- function(list_LAS_char,
       k = ifelse(nrow(df) > 9000, 1, k)
 
       km = kmeans(scale(df), k, nstart = 25)
-
       if (kM == FALSE) {
         k = k
-      } else {
+      }
+      else {
         kmp = factoextra::fviz_cluster(km, data = df,
-                                       palette = c("steelblue", "gold", "limegreen","grey","deeppink","forestgreen","grey45","steelblue","yellow"),
-                                       geom = "point",
-                                       ellipse.type = "convex",
-                                       ggtheme = theme_bw()) +
-          scale_y_continuous(breaks = NULL) +
-          scale_x_continuous(breaks = NULL) +
-          theme(axis.title.x = element_blank(),
-                axis.text.x = element_blank(),
-                plot.title = element_blank(),
-                axis.ticks = element_blank(),
-                axis.text.y = element_blank(),
-                axis.title.y = element_blank(),
-                legend.title = element_blank(),
-                legend.position = c(.9,.25),
-                legend.background = element_rect(fill = "transparent"))
+                                       palette = c("steelblue", "gold", "limegreen",
+                                                   "grey", "deeppink", "forestgreen", "grey45",
+                                                   "steelblue", "yellow"), geom = "point", ellipse.type = "convex",
+                                       ggtheme = theme_bw()) + scale_y_continuous(breaks = NULL) +
+          scale_x_continuous(breaks = NULL) + theme(axis.title.x = element_blank(),
+                                                    axis.text.x = element_blank(), plot.title = element_blank(),
+                                                    axis.ticks = element_blank(), axis.text.y = element_blank(),
+                                                    axis.title.y = element_blank(), legend.title = element_blank(),
+                                                    legend.key.size = unit(1, "cm"),
+                                                    legend.text = element_text(size = 12),
+                                                    legend.position = c(0.9, 0.2), legend.background = element_rect(fill = "transparent"))
         print(kmp)
-        message(crayon::green(str_c("Suggested k is ", k, ".")))
+        message(crayon::green(str_c("Suggested k is ",
+                                    k, ".")))
         kM_ = readline(prompt = "Do you accept k? ")
-        if (kM_ %in% c("y", "Y", "yes", "YES", "ye", "YE")) {
+        if (kM_ %in% c("y", "Y", "yes", "YES", "ye",
+                       "YE")) {
           km = km
-        } else {
+        }
+        else {
           kM__ = readline(prompt = "Enter k: ")
           kM__ = as.double(kM__)
-          #> Update K-means >
           km = kmeans(scale(df), kM__, nstart = 25)
+          kmp = factoextra::fviz_cluster(km, data = df,
+                                         palette = c("steelblue", "gold", "limegreen",
+                                                     "grey", "deeppink", "forestgreen", "grey45",
+                                                     "steelblue", "yellow"), geom = "point", ellipse.type = "convex",
+                                         ggtheme = theme_bw()) + scale_y_continuous(breaks = NULL) +
+            scale_x_continuous(breaks = NULL) + theme(axis.title.x = element_blank(),
+                                                      axis.text.x = element_blank(), plot.title = element_blank(),
+                                                      axis.ticks = element_blank(), axis.text.y = element_text(size = 10),
+                                                      axis.title.y = element_blank(), legend.title = element_blank(),
+                                                      legend.key.size = unit(1, "cm"),
+                                                      legend.text = element_text(size = 12),
+                                                      legend.position = c(0.9, 0.2), legend.background = element_rect(fill = "transparent"))
+          print(kmp)
+          message(crayon::green(str_c("Suggested k is ",
+                                      kM__, ".")))
+          kM_ = readline(prompt = "Do you accept k? ")
+          if (kM_ %in% c("y", "Y", "yes", "YES", "ye",
+                         "YE")) {
+            km = km
+          }
+          else {
+            kM__ = readline(prompt = "Enter k: ")
+            kM__ = as.double(kM__)
+            km = kmeans(scale(df), kM__, nstart = 25)
+            kmp = factoextra::fviz_cluster(km, data = df,
+                                           palette = c("steelblue", "gold", "limegreen",
+                                                       "grey", "deeppink", "forestgreen", "grey45",
+                                                       "steelblue", "yellow"), geom = "point", ellipse.type = "convex",
+                                           ggtheme = theme_bw()) + scale_y_continuous(breaks = NULL) +
+              scale_x_continuous(breaks = NULL) + theme(axis.title.x = element_blank(),
+                                                        axis.text.x = element_blank(), plot.title = element_blank(),
+                                                        axis.ticks = element_blank(), axis.text.y = element_blank(),
+                                                        axis.title.y = element_blank(), legend.title = element_blank(),
+                                                        legend.key.size = unit(1, "cm"),
+                                                        legend.text = element_text(size = 12),
+                                                        legend.position = c(0.9, 0.2), legend.background = element_rect(fill = "transparent"))
+            print(kmp)
+            message(crayon::green(str_c("Suggested k is ",
+                                        kM__, ".")))
+            km = km
+          }
         }
       }
 

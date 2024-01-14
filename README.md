@@ -171,6 +171,7 @@ Parameter adjustment: `cbh_ONLY = 3` and `kM = TRUE` (k-Means Clustering set to 
 <img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/szoveg_opti_5.png">
 
 ```r
+
 O_CBH <- treecbh::get_CBH(its_l,
                           outdir1 = outdi1,
                           outdir2 = outdi2,

@@ -98,22 +98,24 @@ oudir <- "<path to directory>"
 treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID", RETURN = F)
 ```
 
-### CBH detection
+### CBH detection 
 
-Optimization deactivated, performing treeiso plus cbh detection (`cbh_ONLY = 1`). Let's proceed with five trees that have sufficient points.
+## Optimization deactivated, performing **treeiso** plus cbh detection
 
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/3D_tree_example.png">
+Parameter adjustment: `cbh_ONLY = 1`. Let's proceed with five point clouds of deciduous trees to be found in the https://github.com/DijoG/storage/cc_las directory.
+
+<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/las_02_example.png">
 
 ```r
 ?treecbh::get_CBH()
 
-# list of individual las tree clouds and the selection of five
-its_l <- list.files(oudir, pattern = ".las", full.names = T) %>%
+# list of individual las tree clouds, stored normally in 'outdir' set in the previous step.
+# example files used, are in https://github.com/DijoG/storage/cc_las library
+las_l <- list.files(oudir, pattern = ".las", full.names = T) %>%
   gtools::mixedsort()
-las_l <- its_l[c(7,9,72,78,131)]
 
 # visualizing one
-plot(readLAS(las_l[5]), bg = "white", size = 5, axis = T)
+plot(readLAS(las_l[2]), bg = "white", size = 5, axis = T)
 
 # output directories
 outdi1 <- "<path to directory>" # treeiso isolated tree cloud
@@ -149,7 +151,9 @@ Output parameters:\
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/04_A_CBH.png">
 
-Optimization deactivated, executing **treeiso** only (`cbh_ONLY = 2`).
+## Optimization deactivated, executing **treeiso** only
+
+Parameter adjustment: `cbh_ONLY = 2`.
 
 ```r
 treecbh::get_CBH(its_l,
@@ -160,9 +164,11 @@ treecbh::get_CBH(its_l,
                  cc_dir = cc_dir)
 ``` 
 
-Optimization activated with `kM = TRUE` (k-Means Clustering set to TRUE), executing cbh only (`cbh_ONLY = 3`). The interactive optimization process starts. 'Do you accept k?'. User answers, if the answer is no, the user is asked to type a number for `k` after 'Enter k:'.
+## Optimization activated, executing cbh detection only
 
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/sugg_k_no.png">
+Parameter adjustment: `cbh_ONLY = 3` and `kM = TRUE` (k-Means Clustering set to TRUE), executing cbh only (`cbh_ONLY = 3`). The interactive optimization process starts. 'Do you accept k?'. User answers, if the answer is no, the user is asked to type a number for `k` after 'Enter k:'.
+
+<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/szoveg_opti_5.png">
 
 ```r
 O_CBH <- treecbh::get_CBH(its_l,

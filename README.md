@@ -109,7 +109,7 @@ Parameter adjustment: `cbh_ONLY = 1`. Let's proceed with five point clouds of de
 ```r
 ?treecbh::get_CBH()
 
-# list of individual las tree clouds, stored normally in 'outdir' set in the previous step.
+# Example: list of high resolution individual las tree clouds, stored normally in 'outdir' set in the previous step.
 # example files used, are in https://github.com/DijoG/storage/cc_las library
 las_l <- list.files(oudir, pattern = ".las", full.names = T) %>%
   gtools::mixedsort()

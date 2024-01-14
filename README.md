@@ -187,12 +187,13 @@ O_CBH <- treecbh::get_CBH(its_l,
 Example **02.las** plots are displayed in the R Console.
 
 <img align="left" src="https://raw.githubusercontent.com/DijoG/storage/main/README/01_opti_rs.png">
-<img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_opti_rs.png">
+<img align="center" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_opti_rs.png">
 
 
-```
+```r
 O_CBH
 ```
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/05_O_CBH.png">
+
 

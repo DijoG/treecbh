@@ -166,7 +166,8 @@ treecbh::get_CBH(its_l,
 
 ## Optimization activated, executing cbh detection only
 
-Parameter adjustment: `cbh_ONLY = 3` and `kM = TRUE` (k-Means Clustering set to TRUE). The interactive optimization process starts. 'Do you accept k?'. User answers, if the answer is no, the user is asked to type a number for `k` after 'Enter k:'. It can be repeated twice. 
+Parameter adjustment: `cbh_ONLY = 3` and `kM = TRUE` (k-Means Clustering set to TRUE). The interactive optimization process starts. 'Do you accept k?'. User answers, if the answer is no, the user is asked to type a number for `k` after 'Enter k:'. It can be repeated twice. Example **02.las** plots are displayed 
+in the R Console (right).
 
 <img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/szoveg_opti_5.png">
 
@@ -183,8 +184,6 @@ O_CBH <- treecbh::get_CBH(its_l,
                           # inactive CC executeable directory
                           cc_dir = cc_dir)
 ```
-
-Example **02.las** plots are displayed in the R Console.
 
 <img align="left" src="https://raw.githubusercontent.com/DijoG/storage/main/README/01_opti_rs.png">
 <img align="center" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_opti_rs.png">

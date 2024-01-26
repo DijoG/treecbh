@@ -102,7 +102,7 @@ treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID", RETURN = F)
 
 ## Optimization deactivated, performing **treeiso** plus cbh detection
 
-Parameter adjustment: `cbh_ONLY = 1`. Let's proceed with five point clouds of deciduous trees to be found in the https://github.com/DijoG/storage/cc_las directory.
+Parameter adjustment: `cbh_ONLY = 1`. Let's proceed with five point clouds of deciduous trees to be found in the https://github.com/DijoG/storage/tree/main/cc_lasfin directory.
 
 <img align="right" src="https://raw.githubusercontent.com/DijoG/storage/main/README/las_02_example.png">
 

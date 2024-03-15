@@ -467,6 +467,11 @@ get_CANOPYBH <- function(hist_DAT) {
            aes(y = y, x = count)) +
     stat_density2d_filled(bins = 3) +
     geom_point()
+
+  if (class(gp)[1] != "gg") {
+    stop(return(height = 0))
+  }
+
   gpb = ggplot_build(gp)
   gpbdf =
     gpb[[1]][[1]]

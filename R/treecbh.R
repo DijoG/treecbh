@@ -617,7 +617,7 @@ get_CANOPYBH <- function(hist_DAT) {
       mutate(heights = heights)
   }
   #> No kernel >
-  if (is.na(n_n) | lenght(n_n) == 0) {
+  if (is.na(n_n) | length(n_n) == 0) {
     height = 0.4
   }
 

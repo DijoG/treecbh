@@ -616,10 +616,6 @@ get_CANOPYBH <- function(hist_DAT) {
       dfnz %>%
       mutate(heights = heights)
   }
-  #> No kernel >
-  if (is.na(n_n) | length(n_n) == 0) {
-    height = 0.4
-  }
 
   #> Decision >
   if (any(hist_n > 3)) {

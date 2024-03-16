@@ -787,7 +787,11 @@ get_CBH <- function(list_LAS_char,
 
     metrics = list()
     for (tree in 1:length(list_LASS)) {
+
       message(crayon::green(str_c("_______", basename(list_LASS)[tree], "________")))
+
+      #> TIME
+      st <- Sys.time()
 
       #> Original las >
       laso = readLAS(list_LAS_char[tree])
@@ -800,6 +804,25 @@ get_CBH <- function(list_LAS_char,
 
       #> Horizontal cross section ~ segmented las >
       crosss = get_CROSS(lass, cross_WIDTH = cross_WIDTH)
+
+      #> TIME out
+      if (Sys.time() - st > 10) {
+        metrics[[tree]] =
+          tibble(
+            Z_max      = 0,
+            Z_mean     = 0,
+            Z_sd       = 0,
+            Z_N_points = 0,
+            N_points   = 0,
+            CBH        = 0,
+            Hull_area  = 0,
+            Del_vol    = 0,
+            Cube_vol   = 0,
+            Sphere_vol = 0,
+            treeID     = str_remove(basename(list_LASS)[tree], ".las") %>%
+              str_remove(., "tree_"))
+        next
+        }
 
       #> Denstiy (height ~ Z) on original las >
       dens =
@@ -815,6 +838,25 @@ get_CBH <- function(list_LAS_char,
       df = crosss@data %>%
         select(X, Z) %>%
         filter(Z > min_POINT)
+
+      #> TIME out
+      if (Sys.time() - st > 15) {
+        metrics[[tree]] =
+          tibble(
+            Z_max      = 0,
+            Z_mean     = 0,
+            Z_sd       = 0,
+            Z_N_points = 0,
+            N_points   = 0,
+            CBH        = 0,
+            Hull_area  = 0,
+            Del_vol    = 0,
+            Cube_vol   = 0,
+            Sphere_vol = 0,
+            treeID     = str_remove(basename(list_LASS)[tree], ".las") %>%
+              str_remove(., "tree_"))
+        next
+      }
 
       #> K-means clustering
       #> Prediction strength of a clustering:
@@ -927,6 +969,25 @@ get_CBH <- function(list_LAS_char,
 
       #> Finding CBH >
       cbh = get_CANOPYBH(datt_histo)
+
+      #> TIME out
+      if (Sys.time() - st > 20) {
+        metrics[[tree]] =
+          tibble(
+            Z_max      = 0,
+            Z_mean     = 0,
+            Z_sd       = 0,
+            Z_N_points = 0,
+            N_points   = 0,
+            CBH        = 0,
+            Hull_area  = 0,
+            Del_vol    = 0,
+            Cube_vol   = 0,
+            Sphere_vol = 0,
+            treeID     = str_remove(basename(list_LASS)[tree], ".las") %>%
+              str_remove(., "tree_"))
+        next
+      }
 
       #> Canopy ~ original las >
       newdata =

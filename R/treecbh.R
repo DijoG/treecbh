@@ -482,11 +482,6 @@ get_CANOPYBH <- function(hist_DAT) {
     stop(return(height = gpbdf$y %>% max + 1))
   }
 
-  #> No kernel >
-  if (length(n_n) == 0 | class(n_n) != "numeric") {
-    stop(return(height = 0))
-  }
-
   #> One kernel >
   if (length(n_n) == 1) {
     z_r =

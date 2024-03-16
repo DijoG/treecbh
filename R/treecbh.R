@@ -929,25 +929,6 @@ get_CBH <- function(list_LAS_char,
       #> Finding CBH >
       cbh = get_CANOPYBH(datt_histo)
 
-      #> TIME out
-      if (Sys.time() - st > 20) {
-        metrics[[tree]] =
-          tibble(
-            Z_max      = 0,
-            Z_mean     = 0,
-            Z_sd       = 0,
-            Z_N_points = 0,
-            N_points   = 0,
-            CBH        = 0,
-            Hull_area  = 0,
-            Del_vol    = 0,
-            Cube_vol   = 0,
-            Sphere_vol = 0,
-            treeID     = str_remove(basename(list_LASS)[tree], ".las") %>%
-              str_remove(., "tree_"))
-        next
-      }
-
       #> Canopy ~ original las >
       newdata =
         laso@data %>%

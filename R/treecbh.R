@@ -7,7 +7,7 @@ stop_noerr <- function() {
 #' Function for extraction point clouds to individual tree segments.
 #' @param lasFILE las file of forest
 #' @param multiPOLY sf multipolygon, individual tree segments
-#' @param normalize logical, normalization based on CSF-classified ground points using the lidR::knnidw(), if FALSE "flat normalization" is performed
+#' @param normalize logical, if TRUE normalization is performed on CSF-classified ground points using the lidR::knnidw()
 #' @param output_dir string, path to output directory
 #' @param FEATURE character, attribute name and it values (can only be numeric!) to extract from multiPOLY to store in las header
 #' @param RETURN logical, whether to return the list of las or not (default = TRUE)
@@ -28,21 +28,21 @@ get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE
         classify_ground(., incsf) %>%
         normalize_height(., knnidw()) %>%
         filter_poi(., Z > 0)
-    } else {
-      ZZ = llas[[i]]@data %>%
-        filter(Classification == 2) %>%
-        pull(Z)
-      lground[[i]] = tibble(minZ = min(ZZ),
-                            maxZ = max(ZZ),
-                            meanZ = mean(ZZ))
-      llas[[i]] = add_lasattribute(llas[[i]],
-                                   llas[[i]]@data %>%
-                                     mutate(Zn = Z - lground[[i]]$meanZ),
-                                   name = "Zn",
-                                   desc = "Zn") %>%
-        filter_poi(., Zn >= 0) %>%
-        filter_poi(., Classification != 2)
-    }
+    } #else {
+      #ZZ = llas[[i]]@data %>%
+      #  filter(Classification == 2) %>%
+      #  pull(Z)
+      #lground[[i]] = tibble(minZ = min(ZZ),
+      #                      maxZ = max(ZZ),
+      #                      meanZ = mean(ZZ))
+      #llas[[i]] = add_lasattribute(llas[[i]],
+      #                             llas[[i]]@data %>%
+      #                               mutate(Zn = Z - lground[[i]]$meanZ),
+      #                             name = "Zn",
+      #                             desc = "Zn") %>%
+      #  filter_poi(., Zn >= 0) %>%
+      #  filter_poi(., Classification != 2)
+    #}
     if (!is.null(FEATURE)) {
       llas[[i]] = add_lasattribute(llas[[i]],
                                    multiPOLY[i, ] %>%

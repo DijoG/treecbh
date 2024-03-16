@@ -18,7 +18,7 @@ get_3DTREE(
 
 \item{multiPOLY}{sf multipolygon, individual tree segments}
 
-\item{normalize}{logical, normalization based on CSF-classified ground points using the lidR::knnidw(), if FALSE "flat normalization" is performed}
+\item{normalize}{logical, if TRUE normalization is performed on CSF-classified ground points using the lidR::knnidw()}
 
 \item{output_dir}{string, path to output directory}
 

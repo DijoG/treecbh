@@ -468,10 +468,6 @@ get_CANOPYBH <- function(hist_DAT) {
     stat_density2d_filled(bins = 3) +
     geom_point()
 
-  if (class(gp)[1] != "gg") {
-    stop(return(height = 0))
-  }
-
   gpb = ggplot_build(gp)
   gpbdf =
     gpb[[1]][[1]]
@@ -488,7 +484,7 @@ get_CANOPYBH <- function(hist_DAT) {
 
   #> No kernel >
   if (length(n_n) == 0 | class(n_n) != "numeric") {
-    stop(return(height = 0) )
+    stop(return(height = 0))
   }
 
   #> One kernel >

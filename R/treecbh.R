@@ -676,6 +676,248 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
 #' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are active)
+#' @param kM logical, K-means clustering (default 'kM' = TRUE) or interactive CBH tuning
+#' @param cbh_BUFF if 'kM' = FALSE, the buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)
+#' @param method character, optional additional attribute (default = NULL)
+#' @param outdir1 string, path to output directory of treeiso segment results
+#' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
+#' @param K1,L1,DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
+#' @param K2-L2,MAX_GAP,DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
+#' @param VER_O_W,RHO final stage treeiso parameters, default values as indicated
+#' @param cc_dir string, path to CloudCompare.exe
+#' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
+#' @export
+get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale = 0.13,
+                      branch_WIDTH = 0.2, cross_WIDTH = 5, cbh_ONLY = 1, kM = TRUE, cbh_BUFF = 0.5,
+                      method = NULL, outdir1, outdir2, K1 = 10, L1 = 1, DEC_R1 = 0.1,
+                      K2 = 20, L2 = 20, MAX_GAP = 0.5, DEC_R2 = 0.1, VER_O_W = 0.3,
+                      RHO = 0.5, cc_dir) {
+
+  #> Possible errors >
+  if (!min_H_scale %in% seq(0.13, 0.25, 0.01)) {
+    stop(crayon::magenta("Parameter 'min_H_scale' accepts values from .13 to .25"))
+  }
+  if (branch_WIDTH < 0) {
+    stop(crayon::magenta("Parameter 'branch_WIDTH' must be positiv"))
+  }
+  if (cross_WIDTH < 4) {
+    stop(crayon::magenta("Parameter 'cross_WIDTH' must be minimum 4"))
+  }
+  if (!cbh_ONLY %in% 1:3) {
+    stop(crayon::magenta("Parameter 'cbh_ONLY' accepts 1, 2 and 3"))
+  }
+  if (cbh_BUFF < 0.1 & cbh_BUFF > 1) {
+    stop(crayon::magenta("Parameter 'cbh_BUFF' rangees from 0.1 to 1"))
+  }
+  if (K1 < 3 | K1 > 50) {
+    stop(crayon::magenta("Parameter 'K1' accepts values btw. 3 and 50"))
+  }
+  if (K2 < 5 | K2 > 50) {
+    stop(crayon::magenta("Parameter 'K2' accepts values btw. 5 and 50"))
+  }
+  if (L1 < 0.1 | L1 > 40) {
+    stop(crayon::magenta("Regularizing parameter 'L1' accepts values btw. .1 and 40"))
+  }
+  if (L2 < 5 | L2 > 40) {
+    stop(crayon::magenta("Regularizing parameter 'L2' accepts values btw. 5 and 40"))
+  }
+  if (DEC_R1 != 0.1) {
+    stop(crayon::magenta("Parameter 'DEC_R1' must be .1"))
+  }
+  if (DEC_R2 != 0.1) {
+    stop(crayon::magenta("Parameter 'DEC_R2' must be .1"))
+  }
+  if (MAX_GAP < 0.5 | MAX_GAP > 5) {
+    stop(crayon::magenta("Parameter 'MAX_GAP accepts values btw. .5 and 5"))
+  }
+  if (VER_O_W < 0 | VER_O_W > 1.1) {
+    stop(crayon::magenta("Parameter 'VER_O_W' accepts values btw. 0 and 1.1"))
+  }
+  if (RHO < 0 | RHO > 2) {
+    stop(crayon::magenta("Parameter 'RHO' accepts values btw. 0 and 2"))
+  }
+
+  #> outdir strings
+  if (str_sub(outdir1, nchar(outdir1), nchar(outdir1)) != "/") {
+    outdir1 = str_c(outdir1, "/")
+  }
+  if (str_sub(outdir2, nchar(outdir2), nchar(outdir2)) != "/") {
+    outdir2 = str_c(outdir2, "/")
+  }
+
+  #> ensure order
+  list_LAS_char = gtools::mixedsort(list_LAS_char)
+
+  if (cbh_ONLY %in% 1:2) {
+    #> 3D tree decomposition (segmentation) >
+    get_SEG(list_LAS_char, outdir1, outdir2, min_RANGE = min_RANGE,
+            min_POINT = min_POINT, K1 = K1, L1 = L1, DEC_R1 = DEC_R1,
+            K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
+            VER_O_W = VER_O_W, RHO = RHO, cc_dir = cc_dir)
+    if (cbh_ONLY == 2) {
+      message(crayon::green(str_c("_______ Done ________")))
+      stop_noerr()
+    }
+  }
+  if (cbh_ONLY %in% c(1,3)) {
+    list_LASS = list.files(outdir2, pattern = ".las", full.names = T) %>%
+      gtools::mixedsort()
+    need = map_chr(list_LAS_char, ~str_split_1(.x, "/")[str_split_1(outdir2,
+                                                                    "/") %>% length])
+    list_LASS = list_LASS[grep(str_c(need, collapse = "|"),
+                               list_LASS)]
+    metrics = list()
+    for (tree in 1:length(list_LASS)) {
+      message(crayon::green(str_c("_______", basename(list_LASS)[tree],
+                                  "________")))
+      #> Original las >
+      laso = readLAS(list_LAS_char[tree])
+
+      #> Segmented las >
+      lass = readLAS(list_LASS[tree])
+
+      #> min H ~ segmented las >
+      m_H = (lass@data$Z %>% quantile(., .1) %>% as.vector) ^min_H_scale *2
+
+      #> Horizontal cross section ~ segmented las >
+      crosss = get_CROSS(lass, cross_WIDTH = cross_WIDTH)
+
+      #> Denstiy (height ~ Z) on original las >
+      dens =
+        laso@data %>%
+        ggplot(aes(y = Z)) +
+        geom_histogram(binwidth = .2, center = 1)
+      dat_dens =
+        ggplot_build(dens)
+      dat_dens =
+        dat_dens[[1]][[1]]
+
+      #> Removing ground points (again, just in case) and preparing segmented data for clustering >
+      df = crosss@data %>%
+        select(X, Z) %>%
+        filter(Z > min_POINT)
+
+      #> K-means clustering
+      #> Prediction strength of a clustering:
+      #> Tibshirani, R. and Walther, G. (2005) Cluster Validation by Prediction Strength, Journal of Computational and Graphical Statistics, 14, 511-528.
+      set.seed(123)
+      opk = fpc::prediction.strength(scale(df), 2, 10, 30)
+      opkk = map_dbl(opk$predcorr, ~mean(.x)) %>% replace_na(., 0.1)
+
+      k = which.max(opkk)
+      km = kmeans(scale(df), k, nstart = 25)
+
+      dfk = df %>% mutate(km = km$cluster)
+      dfkm = dfk %>% group_by(km) %>% summarise(mZ = mean(Z)) %>%
+        bind_cols(km$centers)
+      dfkk = dfk %>% filter(km == dfkm[which.min(dfkm$mZ),]$km)
+      dfk_histo = dfkk %>% ggplot(aes(y = Z)) + geom_histogram(center = T, binwidth = branch_WIDTH)
+
+      datt_histo = ggplot_build(dfk_histo)
+      datt_histo = datt_histo[[1]][[1]]
+      datt_histo = datt_histo %>% filter(y > m_H)
+
+      #> Finding CBH >
+      cbh = treecbh::get_CANOPYBH(datt_histo)
+
+      #> Activation of CBH tuning >
+      if (kM) {
+        cbh = cbh
+      } else {
+        p = plot_CROSSS(lass, ylab = "Height [m]") +
+          geom_hline(yintercept = cbh, col = "firebrick3") +
+          geom_hline(yintercept = cbh -1, col = "firebrick2", linetype = "dotted") +
+          geom_hline(yintercept = cbh +1, col = "firebrick2", linetype = "dotted")
+        print(p)
+
+        message(crayon::green(str_c("Suggested CBH is ", cbh, ".")))
+        kM_ = readline(prompt = "Do you accept CBH? ")
+
+        if (kM_ %in% c("y", "Y", "yes", "YES", "ye","YE")) {
+          cbh = cbh
+        } else {
+          kM__ = readline(prompt = "Enter assumed CBH: ")
+          kM__ = as.double(kM__)
+
+          dfk_histog = dfk %>%
+            filter(Z > (kM__ - cbh_BUFF) & Z < (kM__ + cbh_BUFF)) %>%
+            ggplot(aes(y = Z)) +
+            geom_histogram(center = T, binwidth = branch_WIDTH)
+
+          datt_histog = ggplot_build(dfk_histog)
+          datt_histog = datt_histog[[1]][[1]]
+
+          #> Finding CBH based on assumed (tuned) CBH >
+          cbh = treecbh::get_CANOPYBH(datt_histog)
+        }
+
+      }
+
+      #> Canopy ~ original las >
+      newdata =
+        laso@data %>%
+        data.frame() %>%
+        select(X, Y, Z) %>%
+        filter(Z > cbh) %>%
+        as.matrix()
+
+      las_new =
+        laso %>%
+        filter_poi(Z > cbh)
+
+      #> Delaunay hull area >
+      convex_hull =
+        geometry::convhulln(newdata, "FA")
+
+      #> Delaunay hull volume >
+      delaunaj =
+        geometry::delaunayn(newdata, "Fa")
+
+      #> Voxelizing canopy (0.2m) >
+      vmv = get_VOXEL(las_new@data, .2)
+
+      #> Exclude ground and low vegetation from density (height ~ Z) of original las >
+      dat_histos =
+        dat_dens %>%
+        filter(y >= m_H)
+
+      #> Collect metrics >
+      metrics[[tree]] =
+        tibble(
+          Z_max      = laso@data$Z %>% max,
+          Z_mean     = laso@data$Z %>% mean,
+          Z_sd       = laso@data$Z %>% sd,
+          Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
+          N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
+          CBH        = cbh,
+          Hull_area  = convex_hull$area,
+          Del_vol    = delaunaj$areas %>% sum,
+          Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
+          Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
+          treeID     = str_remove(basename(list_LASS)[tree], ".las") %>% str_remove(., "tree_"))
+    }
+
+    metrics = metrics %>%
+      bind_rows()
+
+    if (!is.null(method)) {
+      metrics = metrics %>%
+        mutate(method = method)
+    }
+    message(crayon::green(str_c("_______ Done ________")))
+    return(metrics)
+  }
+}
+
+
+#' old MAIN FUNCTION of treecbh, detecting CBH and deriving numerous metrics.
+#' @param list_LAS_char character, list of las files
+#' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation
+#' @param min_POINT numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)
+#' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
+#' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
+#' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
+#' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are active)
 #' @param kM logical, interactive K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
 #' @param method character, optional additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
@@ -686,7 +928,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param cc_dir string, path to CloudCompare.exe
 #' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
 #' @export
-get_CBH <- function(list_LAS_char,
+get_CBHo <- function(list_LAS_char,
                     min_RANGE = 5,
                     min_POINT = .2,
                     min_H_scale = .13,
@@ -1005,6 +1247,26 @@ plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {
     scale_y_continuous(breaks = NULL) +
     scale_x_continuous(breaks = NULL)
 
+  return(PLOT)
+}
+
+#' Function for 2D cross-sectional plot used only in get_CBH().
+#' @param las las file
+#' @param col character, color of points, default = "grey25"
+#' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
+#' @return displays ggplot
+#' @export
+plot_CROSSS <- function (las, col = "grey25", ylab, cross_WIDTH = 5)
+{
+  p1 = c(min(las@data$X), mean(las@data$Y))
+  p2 = c(max(las@data$X), mean(las@data$Y))
+  data_clip = clip_transect(las, p1, p2, cross_WIDTH)
+  PLOT = ggplot(data_clip@data, aes(X, Z)) +
+    geom_point(size = 0.5, col = col) +
+    coord_equal() +
+    labs(y = ylab, x = NULL) +
+    scale_y_continuous(breaks = ceiling(min(data_clip$Z)):floor(max(data_clip$Z))) +
+    scale_x_continuous(breaks = NULL)
   return(PLOT)
 }
 

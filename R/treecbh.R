@@ -800,10 +800,10 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
         select(X, Z) %>%
         filter(Z > min_POINT)
 
-      #> Removing points under min_H and preparing original data >
+      #> Removing points under min_POINT and preparing original data >
       dfo = cross@data %>%
         select(X, Z) %>%
-        filter(Z > min_H)
+        filter(Z > min_POINT)
 
       #> K-means clustering
       #> Prediction strength of a clustering:

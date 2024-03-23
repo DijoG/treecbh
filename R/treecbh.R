@@ -782,6 +782,9 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
       #> Horizontal cross section ~ segmented las >
       crosss = get_CROSS(lass, cross_WIDTH = cross_WIDTH)
 
+      #> Horizontal cross section ~ original las >
+      cross = get_CROSS(laso, cross_WIDTH = cross_WIDTH)
+
       #> Denstiy (height ~ Z) on original las >
       dens =
         laso@data %>%
@@ -796,6 +799,11 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
       df = crosss@data %>%
         select(X, Z) %>%
         filter(Z > min_POINT)
+
+      #> Removing points under min_H and preparing original data >
+      dfo = cross@data %>%
+        select(X, Z) %>%
+        filter(Z > min_H)
 
       #> K-means clustering
       #> Prediction strength of a clustering:
@@ -839,7 +847,7 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
           kM__ = readline(prompt = "Enter assumed CBH: ")
           kM__ = as.double(kM__)
 
-          dfk_histog = dfk %>%
+          dfk_histog = dfo %>%
             filter(Z > (kM__ - cbh_BUFF) & Z < (kM__ + cbh_BUFF)) %>%
             ggplot(aes(y = Z)) +
             geom_histogram(center = T, binwidth = branch_WIDTH)

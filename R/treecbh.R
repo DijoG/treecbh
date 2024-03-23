@@ -824,7 +824,7 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
       if (kM) {
         cbh = cbh
       } else {
-        p = plot_CROSSS(lass, ylab = "Height [m]") +
+        p = plot_CROSSS(laso, ylab = "Height [m]") +
           geom_hline(yintercept = cbh, col = "firebrick3") +
           geom_hline(yintercept = cbh -1, col = "firebrick2", linetype = "dotted") +
           geom_hline(yintercept = cbh +1, col = "firebrick2", linetype = "dotted")
@@ -850,7 +850,6 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
           #> Finding CBH based on assumed (tuned) CBH >
           cbh = treecbh::get_CANOPYBH(datt_histog)
         }
-
       }
 
       #> Canopy ~ original las >

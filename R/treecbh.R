@@ -677,7 +677,7 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
 #' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are active)
 #' @param kM logical, K-means clustering (default 'kM' = TRUE) or interactive CBH tuning
-#' @param cbh_BUFF if 'kM' = FALSE, the buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)
+#' @param cbh_BUFF logical, if 'kM' = FALSE, the buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)
 #' @param method character, optional additional attribute (default = NULL)
 #' @param outdir1 string, path to output directory of treeiso segment results
 #' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
@@ -685,13 +685,14 @@ get_CANOPYBH <- function(hist_DAT) {
 #' @param K2-L2,MAX_GAP,DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
 #' @param VER_O_W,RHO final stage treeiso parameters, default values as indicated
 #' @param cc_dir string, path to CloudCompare.exe
-#' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
+#' @param VOL logical, if TRUE, returns Hull_area, Del_vol, Cube_vol, Sphere_vol too (default = FALSE)
+#' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH and treeID) plus (Hull_area, Del_vol, Cube_vol, Sphere_vol)
 #' @export
 get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale = 0.13,
                       branch_WIDTH = 0.2, cross_WIDTH = 5, cbh_ONLY = 1, kM = TRUE, cbh_BUFF = 0.5,
                       method = NULL, outdir1, outdir2, K1 = 10, L1 = 1, DEC_R1 = 0.1,
                       K2 = 20, L2 = 20, MAX_GAP = 0.5, DEC_R2 = 0.1, VER_O_W = 0.3,
-                      RHO = 0.5, cc_dir) {
+                      RHO = 0.5, cc_dir, VOL = FALSE) {
 
   #> Possible errors >
   if (!min_H_scale %in% seq(0.13, 0.25, 0.01)) {
@@ -860,28 +861,6 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
         }
       }
 
-      #> Canopy ~ original las >
-      newdata =
-        laso@data %>%
-        data.frame() %>%
-        select(X, Y, Z) %>%
-        filter(Z > cbh) %>%
-        as.matrix()
-
-      las_new =
-        laso %>%
-        filter_poi(Z > cbh)
-
-      #> Delaunay hull area >
-      convex_hull =
-        geometry::convhulln(newdata, "FA")
-
-      #> Delaunay hull volume >
-      delaunaj =
-        geometry::delaunayn(newdata, "Fa")
-
-      #> Voxelizing canopy (0.2m) >
-      vmv = get_VOXEL(las_new@data, .2)
 
       #> Exclude ground and low vegetation from density (height ~ Z) of original las >
       dat_histos =
@@ -889,6 +868,46 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
         filter(y >= m_H)
 
       #> Collect metrics >
+
+      if (VOL) {
+        #> Canopy ~ original las >
+        newdata =
+          laso@data %>%
+          data.frame() %>%
+          select(X, Y, Z) %>%
+          filter(Z > cbh) %>%
+          as.matrix()
+
+        las_new =
+          laso %>%
+          filter_poi(Z > cbh)
+
+        #> Delaunay hull area >
+        convex_hull =
+          geometry::convhulln(newdata, "FA")
+
+        #> Delaunay hull volume >
+        delaunaj =
+          geometry::delaunayn(newdata, "Fa")
+
+        #> Voxelizing canopy (0.2m) >
+        vmv = get_VOXEL(las_new@data, .2)
+
+        metrics[[tree]] =
+          tibble(
+            Z_max      = laso@data$Z %>% max,
+            Z_mean     = laso@data$Z %>% mean,
+            Z_sd       = laso@data$Z %>% sd,
+            Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
+            N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
+            CBH        = cbh,
+            Hull_area  = convex_hull$area,
+            Del_vol    = delaunaj$areas %>% sum,
+            Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
+            Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
+            treeID     = str_remove(basename(list_LASS)[tree], ".las") %>% str_remove(., "tree_"))
+      }
+
       metrics[[tree]] =
         tibble(
           Z_max      = laso@data$Z %>% max,
@@ -897,12 +916,9 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
           Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
           N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
           CBH        = cbh,
-          Hull_area  = convex_hull$area,
-          Del_vol    = delaunaj$areas %>% sum,
-          Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
-          Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
           treeID     = str_remove(basename(list_LASS)[tree], ".las") %>% str_remove(., "tree_"))
-    }
+      }
+
 
     metrics = metrics %>%
       bind_rows()

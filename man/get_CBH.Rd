@@ -26,7 +26,8 @@ get_CBH(
   DEC_R2 = 0.1,
   VER_O_W = 0.3,
   RHO = 0.5,
-  cc_dir
+  cc_dir,
+  VOL = FALSE
 )
 }
 \arguments{
@@ -46,7 +47,7 @@ get_CBH(
 
 \item{kM}{logical, K-means clustering (default 'kM' = TRUE) or interactive CBH tuning}
 
-\item{cbh_BUFF}{if 'kM' = FALSE, the buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)}
+\item{cbh_BUFF}{logical, if 'kM' = FALSE, the buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)}
 
 \item{method}{character, optional additional attribute (default = NULL)}
 
@@ -60,10 +61,12 @@ get_CBH(
 
 \item{cc_dir}{string, path to CloudCompare.exe}
 
+\item{VOL}{logical, if TRUE, returns Hull_area, Del_vol, Cube_vol, Sphere_vol too (default = FALSE)}
+
 \item{K2-L2, MAX_GAP, DEC_R2}{second stage cut-pursuit parameters (treeiso), default values as indicated}
 }
 \value{
-tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
+tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH and treeID) plus (Hull_area, Del_vol, Cube_vol, Sphere_vol)
 }
 \description{
 MAIN FUNCTION of treecbh, detecting CBH and deriving numerous metrics.

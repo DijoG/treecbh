@@ -1,7 +1,7 @@
 # treecbh 
 ==========
 
-The **treecbh** package provides functions to detect individual tree level Canopy Base Height (CBH) using high-resolution LiDAR data. Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the **lidR** package. 
+The **treecbh** package provides functions to detect individual tree level Crown Base Height (CBH) using high-resolution LiDAR data. Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the **lidR** package. 
 
 ==========
 

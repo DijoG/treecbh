@@ -73,11 +73,11 @@ Point-based crown segmentation using the Dalponte algorithm.
 algo_crowns <- lidR::dalponte2016(CHM, treetops)
 las_crowns <- lidR::segment_trees(Alas, algo_crowns, attribute = "ID")
 ```
-Obtaining individual tree segments (its) as polygons.
+Obtaining Individual Tree Segments (ITS) as polygons.
 
 ```r
-Apoly <- lidR::crown_metrics(las_crowns, attribute = "ID", geom = "concave", func = NULL)
-plot(sf::st_geometry(Apoly), reset = FALSE, col = "forestgreen", border = "grey80")
+ITS <- lidR::crown_metrics(las_crowns, attribute = "ID", geom = "concave", func = NULL)
+plot(sf::st_geometry(ITS), reset = FALSE, col = "forestgreen", border = "grey80")
 plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 ```
 
@@ -85,12 +85,11 @@ plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 
 Some trees were not segmented.
 
-Extracting point clouds to its (classifying ground points and saving las files by default)
-This step is only necessary if you have different its shape file coming from an outer source.
+Extracting tree point clouds to ITS (classifying ground points and saving tree point cloud files by default).
 
 ```r
 oudir <- "<path/to/directory>"
-treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID")
+treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
 ```
 
 ### CBH detection 
@@ -114,7 +113,7 @@ O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           # Not necessary (default):
                           kM = params$parameters$kM)
 ```
-User interaction:
+User R Console interaction:
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_table.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_02.png">

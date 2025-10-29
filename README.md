@@ -130,9 +130,9 @@ Let's check O_CBH:
 # 2) Optimization deactivated, executing treeiso only (PRE-PROCESSING step!) 
 # Sensible above 20 points/m², it skips las trees with smaller than 20 points/point cloud (4-7 points/m²)
 
-outdi_treeiso <- "D:/test/treecbh/treeiso"    # treeiso isolated tree cloud
-outdi_filtered <- "D:/test/treecbh/filtered"  # filtered tree cloud (stem plus first leaved branch)
-cc_dir <- "D:/CloudCompare/CloudCompare.exe"
+outdi_treeiso <- "<path/to/dir_treeiso>"    # treeiso isolated tree cloud
+outdi_filtered <- "<path/to/dir_filtered>"  # filtered tree cloud (stem plus first leaved branch)
+cc_dir <- "<path/to/CloudCompare.exe>"      
 
 treecbh::get_CBH(list_LAS_char = las_l,
                  outdir1 = outdi_treeiso,

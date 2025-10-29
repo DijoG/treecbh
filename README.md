@@ -6,6 +6,10 @@ Individual tree segmentation must be conducted prior. The package is meant to be
 
 ***Update (29.10.2025):*** Cumulative percentile-based density method implemented instead of the original Kernel density approach.
 
+ - **Robust**: works with various tree shapes
+ - **Conservative**: 5th percentile avoids false positives from low outliers
+ - **Simple**: much easier to understand and modify (compared to the kernel-based density method)
+
 ## Original paper
 *Testing treecbh in Central European forests: an R package for crown base height detection using high-resolution aerial laser-scanned data*
 

@@ -104,8 +104,8 @@ O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           # Not necessary (default):
                           kM = params$parameters$kM)
 ```
-
 User R Console interaction:
+
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_table.png">
 
 User R Plots with R Console interaction:

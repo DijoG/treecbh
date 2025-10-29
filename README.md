@@ -113,7 +113,7 @@ User R Console interaction:
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_table.png">
 
-User R Plots with R Console interaction:
+Simultaneous R Plots with R Console interaction:
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_001.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_002.png">

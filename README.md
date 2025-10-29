@@ -1,7 +1,9 @@
-# treecbh 
+# treecbh 🌳
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![R](https://img.shields.io/badge/R-%3E%3D%204.0.0-blue.svg)](https://www.r-project.org/)
+[![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 
 The **treecbh** package provides functions to detect individual tree level Crown Base Height (CBH) using high-resolution LiDAR data. 
 
@@ -17,6 +19,12 @@ Individual tree segmentation must be conducted prior. The package is meant to be
 *Testing treecbh in Central European forests: an R package for crown base height detection using high-resolution aerial laser-scanned data*
 
 https://doi.org/10.1093/forestry/cpae044
+
+## System Requirements
+
+- **R** version 4.0.0 or higher
+- **CloudCompare** (for tree isolation functionality)
+- **Recommended**: 8GB+ RAM for processing large point clouds
 
 ## Required packages
 
@@ -85,6 +93,8 @@ treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
 
 ### CBH detection 
 
+The following functions and functionality apply to the usage of high point-density LiDAR data:
+
 ```r
 # List las files
 las_l <- list.files(oudir, pattern = ".las", full.names = T) %>%
@@ -143,7 +153,28 @@ treecbh::get_CBH(list_LAS_char = las_l,
 D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           outdir1 = outdi_treeiso,
                           outdir2 = outdi_filtered,
-                          # Run both tree isolation and CBH detection
+                          # Run both tree isolation and CBH detection:
                           cbh_ONLY = 1,
                           cc_dir = cc_dir)
 ```
+## Common issues
+
+  - "No ground points found" error
+
+        Solution: Ensure your point cloud includes ground points or set normalize = FALSE in get_3DTREE()
+
+  - CloudCompare not found
+
+        Solution: Verify the path to CloudCompare.exe in the cc_dir parameter
+
+  - Empty output directories
+
+        Solution: Check that input LAS files have sufficient points (>20 points per tree)
+
+  - Interactive mode not working
+
+        Solution: Ensure you're running R in interactive mode (RStudio recommended)
+
+  - "Cannot write a file with 0 point" error
+
+        Solution: The function automatically skips files with insufficient points. Check input file  quality.

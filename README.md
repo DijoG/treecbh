@@ -124,6 +124,9 @@ User interaction:
 
 Let's check O_CBH:
 
+```r
+O_CBH
+```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
 
 ```r

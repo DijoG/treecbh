@@ -7,7 +7,7 @@ The **treecbh** package provides functions to detect individual tree level Crown
 
 Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the **lidR** package. 
 
-***Update (29.10.2025):*** Cumulative percentile-based density method implemented instead of the original Kernel density approach.
+***Update (29.10.2025):*** Cumulative percentile-based density method implemented instead of the original kernel density approach.
 
  - **Robust**: works with various tree shapes
  - **Conservative**: 5th percentile avoids false positives from low outliers

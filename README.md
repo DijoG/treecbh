@@ -86,7 +86,7 @@ oudir <- "<path/to/directory>"
 treecbh::get_3DTREE(Alas, Apoly, output_dir = oudir, FEATURE= "ID")
 ```
 
-### CBH location 
+### CBH detection 
 
 ```r
 # List las files
@@ -115,7 +115,7 @@ User interaction:
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_04.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_05.png">
 
-Let's check 'O_CBH':
+Let's check O_CBH:
 
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
 

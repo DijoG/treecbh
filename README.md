@@ -161,20 +161,20 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
 
   - "No ground points found" error
 
-        Solution: Ensure your point cloud includes ground points or set normalize = FALSE in get_3DTREE()
+    Solution: Ensure your point cloud includes ground points or set normalize = FALSE in get_3DTREE()
 
   - CloudCompare not found
 
-        Solution: Verify the path to CloudCompare.exe in the cc_dir parameter
+    Solution: Verify the path to CloudCompare.exe in the cc_dir parameter
 
   - Empty output directories
 
-        Solution: Check that input LAS files have sufficient points (>20 points per tree)
+    Solution: Check that input LAS files have sufficient points (>20 points per tree)
 
   - Interactive mode not working
 
-        Solution: Ensure you're running R in interactive mode (RStudio recommended)
+    Solution: Ensure you're running R in interactive mode (RStudio recommended)
 
   - "Cannot write a file with 0 point" error
 
-        Solution: The function automatically skips files with insufficient points. Check input file  quality.
+    Solution: The function automatically skips files with insufficient points. Check input file  quality.

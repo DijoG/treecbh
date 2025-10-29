@@ -15,11 +15,6 @@ Individual tree segmentation must be conducted prior. The package is meant to be
  - **Conservative**: 5th percentile avoids false positives from low outliers
  - **Simple**: much easier to understand and modify (compared to the original 2D kernel method)
 
-## Original paper
-*Testing treecbh in Central European forests: an R package for crown base height detection using high-resolution aerial laser-scanned data*
-
-https://doi.org/10.1093/forestry/cpae044
-
 ## System Requirements
 
 - **R** version 4.0.0 or higher
@@ -93,7 +88,7 @@ treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
 
 ### CBH Detection 
 
-The following functions and functionality apply to the usage of high point-density LiDAR data:
+The following functions and their functionality apply to the usage of high point-density LiDAR data:
 
 ```r
 # List las files
@@ -157,6 +152,12 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           cbh_ONLY = 1,
                           cc_dir = cc_dir)
 ```
+## Citation
+If you use **treecbh** in your rescerach please cite the original paper:
+*Testing treecbh in Central European forests: an R package for crown base height detection using high-resolution aerial laser-scanned data*
+
+https://doi.org/10.1093/forestry/cpae044
+
 ## Common Issues
 
   - "No ground points found" error
@@ -171,10 +172,4 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
 
     Solution: Ensure input file point density sufficiency using *get_PARAMS()* (> 20 points/m²).
     
-## Community and Support
 
-  - Issues: Report bugs and feature requests on GitHub Issues
-
-  - Questions: Use GitHub Discussions for usage questions
-
-  - Contributions: Pull requests welcome!

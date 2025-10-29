@@ -28,8 +28,8 @@ tidyverse, lidR, RCSF, sf, data.table, crayon, fpc, geometry, gtools
 devtools::install_github("DijoG/treecbh")
 ```
 
-# Example
-Demonstration using low point-density data about how to use **treecbh** combined with **lidR**. 
+## Example
+This demonstration uses low point-density data shows how to use **treecbh** combined with **lidR**. 
 
 ### Data preparation
 
@@ -106,7 +106,7 @@ tictoc::toc()
 # 25.84 sec
 
 # Run
-# 1) Optimization activated, executing cbh detection only (default)
+# 1) Optimization activated (default cbh_ONLY = 3): executing cbh detection only
 O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           # Not necessary (default):
                           cbh_ONLY = params$parameters$cbh_ONLY,
@@ -131,8 +131,8 @@ O_CBH
 Two other modes of **get_CBH()**
 
 ```r
-# 2) Optimization deactivated, executing treeiso only (PRE-PROCESSING step!) 
-# Sensible above 20 points/m², it skips las trees with smaller than 20 points/point cloud (4-7 points/m²)
+# 2) Optimization deactivated (cbh_ONLY = 2): executing treeiso only (PRE-PROCESSING step!) 
+# SENSIBLE above 20 points/m², it skips input points clouds with smaller than 20 points/point cloud (4-7 points/m²)
 
 outdi_treeiso <- "<path/to/dir_treeiso>"    # treeiso isolated tree cloud
 outdi_filtered <- "<path/to/dir_filtered>"  # filtered tree cloud (stem plus first leaved branch)
@@ -145,7 +145,7 @@ treecbh::get_CBH(list_LAS_char = las_l,
                  cbh_ONLY = 2,
                  cc_dir = cc_dir)
 
-# 3) Optimization deactivated, performing treeiso plus CBH detection
+# 3) Optimization deactivated (cbh_ONLY = 1): performing treeiso plus CBH detection
 # EXECUTE ONLY if params$density_stats$mean_density > 20
 D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           outdir1 = outdi_treeiso,

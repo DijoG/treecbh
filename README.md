@@ -22,7 +22,7 @@ devtools::install_github("DijoG/treecbh")
 ```
 
 # Example
-Demonstration of how to use **treecbh** combined with **lidR**. 
+Demonstration using low point-density data about how to use **treecbh** combined with **lidR**. 
 
 ### Data preparation
 
@@ -143,6 +143,3 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           cbh_ONLY = 1,
                           cc_dir = cc_dir)
 ```
-
-
-

@@ -83,7 +83,7 @@ plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 ```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_its_treetops.png">
 
-Some trees were not segmented.
+*Note: Some trees were not segmented.*
 
 Extracting tree point clouds to ITS (classifying ground points and saving tree point cloud files by default).
 ```r
@@ -91,7 +91,7 @@ oudir <- "<path/to/directory>"
 treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
 ```
 
-### CBH detection 
+### CBH Detection 
 
 The following functions and functionality apply to the usage of high point-density LiDAR data:
 
@@ -157,7 +157,7 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           cbh_ONLY = 1,
                           cc_dir = cc_dir)
 ```
-## Common issues
+## Common Issues
 
   - "No ground points found" error
 
@@ -167,14 +167,14 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
 
     Solution: Verify the path to CloudCompare.exe in the *cc_dir* parameter
 
-  - Empty output directories
+  - Interactive mode gets stuck and/or "Cannot write a file with 0 point" error
 
-    Solution: Check that input LAS files have sufficient points (>20 points per tree)
+    Solution: Ensure input file point density sufficiency using *get_PARAMS()* (> 20 points/m²).
+    
+## Community and Support
 
-  - Interactive mode not working
+  - Issues: Report bugs and feature requests on GitHub Issues
 
-    Solution: Ensure you're running R in interactive mode (RStudio recommended)
+  - Questions: Use GitHub Discussions for usage questions
 
-  - "Cannot write a file with 0 point" error
-
-    Solution: Check input file point density quality using *get_PARAMS()*.
+  - Contributions: Pull requests welcome!

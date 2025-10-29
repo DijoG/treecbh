@@ -5,7 +5,7 @@
 [![R](https://img.shields.io/badge/R-%3E%3D%204.0.0-blue.svg)](https://www.r-project.org/)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 
-The `**treecbh**` package provides functions to detect individual tree level Crown Base Height (CBH) using high-resolution LiDAR data. 
+The ***treecbh*** package provides functions to detect individual tree level Crown Base Height (CBH) using high-resolution LiDAR data. 
 
 Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the `lidR` package. 
 
@@ -31,12 +31,12 @@ Individual tree segmentation must be conducted prior. The package is meant to be
 devtools::install_github("DijoG/treecbh")
 ```
 ## Example
-This demonstration uses low point-density data and shows how to use `**treecbh**` combined with `lidR`. 
+This demonstration uses low point-density data and shows how to use ***treecbh*** combined with `lidR`. 
 
 ### Data preparation
 
 ```r
-require(lidR);require(tidyverse)
+require(lidR);require(dplyr)
 
 # Forest point cloud (low resolution example data)
 LAS <- system.file("extdata", "MixedConifer.laz", package = "lidR")
@@ -153,7 +153,7 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           cc_dir = cc_dir)
 ```
 ## Citation
-If you use `**treecbh**` in your research please cite the original paper:
+If you use ***treecbh*** in your research please cite the original paper:
 *Testing treecbh in Central European forests: an R package for crown base height detection using high-resolution aerial laser-scanned data*
 
 https://doi.org/10.1093/forestry/cpae044

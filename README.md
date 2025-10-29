@@ -104,6 +104,7 @@ O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           # Not necessary (default):
                           kM = params$parameters$kM)
 ```
+
 User R Console interaction:
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_table.png">
 
@@ -113,13 +114,13 @@ User R Plots with R Console interaction:
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_04.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_05.png">
 
-Let's check O_CBH:
+Let's check O_CBH.
 ```r
 O_CBH
 ```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
 
-Two other modes of **get_CBH()**
+Two other modes of **get_CBH()**.
 ```r
 # 2) Optimization deactivated (cbh_ONLY = 2): executing treeiso only (PRE-PROCESSING step!) 
 # SENSIBLE above 20 points/m², it skips input points clouds with smaller than 20 points/point cloud (4-7 points/m²)

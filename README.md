@@ -28,7 +28,7 @@ tidyverse, lidR, RCSF, sf, data.table, crayon, fpc, geometry, gtools
 devtools::install_github("DijoG/treecbh")
 ```
 ## Example
-This demonstration uses low point-density data shows how to use **treecbh** combined with **lidR**. 
+This demonstration uses low point-density data and shows how to use **treecbh** combined with **lidR**. 
 
 ### Data preparation
 

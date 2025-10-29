@@ -10,7 +10,7 @@ get_3DTREE(
   normalize = TRUE,
   output_dir,
   FEATURE = NULL,
-  RETURN = TRUE
+  RETURN = FALSE
 )
 }
 \arguments{
@@ -18,13 +18,13 @@ get_3DTREE(
 
 \item{multiPOLY}{sf multipolygon, individual tree segments}
 
-\item{normalize}{logical, if TRUE normalization is performed on CSF-classified ground points using the lidR::knnidw()}
+\item{normalize}{logical, if TRUE normalization is performed on the ENTIRE dataset before segmentation}
 
 \item{output_dir}{string, path to output directory}
 
-\item{FEATURE}{character, attribute name and it values (can only be numeric!) to extract from multiPOLY to store in las header}
+\item{FEATURE}{character, attribute name and its values}
 
-\item{RETURN}{logical, whether to return the list of las or not (default = TRUE)}
+\item{RETURN}{logical, whether to return the list of las or not (default = FALSE)}
 }
 \value{
 list of las files (point clouds of individual tree segments)

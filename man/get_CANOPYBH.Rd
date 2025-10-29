@@ -2,16 +2,16 @@
 % Please edit documentation in R/treecbh.R
 \name{get_CANOPYBH}
 \alias{get_CANOPYBH}
-\title{Function for 2D kernel method including the decision scheme, used in get_CBH().}
+\title{Function for percentile-based canopy base height detection, used in get_CBH().}
 \usage{
 get_CANOPYBH(hist_DAT)
 }
 \arguments{
-\item{hist_DAT}{centered bins of counts on the output by    the vertical cross-sectional K-means clustering}
+\item{hist_DAT}{centered bins of counts on the output by the vertical cross-sectional K-means clustering}
 }
 \value{
 numeric value of CBH
 }
 \description{
-Function for 2D kernel method including the decision scheme, used in get_CBH().
+Function for percentile-based canopy base height detection, used in get_CBH().
 }

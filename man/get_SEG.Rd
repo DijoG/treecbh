@@ -41,6 +41,8 @@ get_SEG(
 }
 \value{
 las file
+
+las file
 }
 \description{
 Function for implementing within segment tree isolation using treeiso, used in get_CBH():

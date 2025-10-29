@@ -11,12 +11,12 @@ get_CBH(
   min_H_scale = 0.13,
   branch_WIDTH = 0.2,
   cross_WIDTH = 5,
-  cbh_ONLY = 1,
+  cbh_ONLY = 3,
   kM = TRUE,
   cbh_BUFF = 0.5,
   method = NULL,
-  outdir1,
-  outdir2,
+  outdir1 = NULL,
+  outdir2 = NULL,
   K1 = 10,
   L1 = 1,
   DEC_R1 = 0.1,
@@ -26,12 +26,12 @@ get_CBH(
   DEC_R2 = 0.1,
   VER_O_W = 0.3,
   RHO = 0.5,
-  cc_dir,
+  cc_dir = NULL,
   VOL = FALSE
 )
 }
 \arguments{
-\item{list_LAS_char}{character, list of las files}
+\item{list_LAS_char}{character, list of input tree point cloud las files (outputted by get_3DTREE())}
 
 \item{min_RANGE}{numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation}
 
@@ -43,27 +43,27 @@ get_CBH(
 
 \item{cross_WIDTH}{numeric, width of cross-section (m, default = 5)}
 
-\item{cbh_ONLY}{numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are active)}
+\item{cbh_ONLY}{numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 3, meaning CBH detection is active)}
 
-\item{kM}{logical, K-means clustering (default 'kM' = TRUE) or interactive CBH tuning}
+\item{kM}{logical, automatic percentile-based (default 'kM' = TRUE) or interactive CBH tuning}
 
-\item{cbh_BUFF}{logical, if 'kM' = FALSE, the buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)}
+\item{cbh_BUFF}{logical, if 'kM' = FALSE, the vertical buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)}
 
-\item{method}{character, optional additional attribute (default = NULL)}
+\item{method}{character, optional additional attribute (default = NULL in combination with default 'cbh_ONLY = 3')}
 
-\item{outdir1}{string, path to output directory of treeiso segment results}
+\item{outdir1}{string, path to output directory of treeiso segment results (default = NULL in combination with default 'cbh_ONLY = 3')}
 
-\item{outdir2}{string, path to output directory of filtered segments (intermediate_segs and final_segs)}
+\item{outdir2}{string, path to output directory of filtered segments (intermediate_segs and final_segs) (default = NULL)}
 
 \item{K1, L1, DEC_R1}{first stage cut-pursuit parameters (treeiso), default values as indicated}
 
+\item{K2, L2, MAX_GAP, DEC_R2}{second stage cut-pursuit parameters (treeiso), default values as indicated}
+
 \item{VER_O_W, RHO}{final stage treeiso parameters, default values as indicated}
 
-\item{cc_dir}{string, path to CloudCompare.exe}
+\item{cc_dir}{string, path to CloudCompare.exe (default = NULL in combination with default 'cbh_ONLY = 3')}
 
-\item{VOL}{logical, if TRUE, returns Hull_area, Del_vol, Cube_vol, Sphere_vol too (default = FALSE)}
-
-\item{K2-L2, MAX_GAP, DEC_R2}{second stage cut-pursuit parameters (treeiso), default values as indicated}
+\item{VOL}{logical, if TRUE returns Hull_area, Del_vol, Cube_vol and Sphere_vol too (default = FALSE)}
 }
 \value{
 tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH and treeID) plus (Hull_area, Del_vol, Cube_vol, Sphere_vol)

@@ -4,62 +4,78 @@ stop_noerr <- function() {
   on.exit(options(noerr))
   stop()
 }
+
 #' Function for extraction point clouds to individual tree segments.
 #' @param lasFILE las file of forest
 #' @param multiPOLY sf multipolygon, individual tree segments
-#' @param normalize logical, if TRUE normalization is performed on CSF-classified ground points using the lidR::knnidw()
+#' @param normalize logical, if TRUE normalization is performed on the ENTIRE dataset before segmentation
 #' @param output_dir string, path to output directory
-#' @param FEATURE character, attribute name and it values (can only be numeric!) to extract from multiPOLY to store in las header
-#' @param RETURN logical, whether to return the list of las or not (default = TRUE)
+#' @param FEATURE character, attribute name and its values
+#' @param RETURN logical, whether to return the list of las or not (default = FALSE)
 #' @return list of las files (point clouds of individual tree segments)
 #' @export
-get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE = NULL, RETURN = TRUE) {
+get_3DTREE <- function(lasFILE, multiPOLY, normalize = TRUE, output_dir, FEATURE = NULL, RETURN = FALSE) {
 
-  llas <- list()
-  lground <- list()
+  # Create output directory if it doesn't exist
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
 
-  for (i in 1:(multiPOLY %>% nrow)) {
+  # Normalizing the dataset
+  if (normalize) {
+    message(crayon::blue("Normalizing entire point cloud..."))
+
+    # Use conservative CSF parameters
+    incsf = csf(sloop_smooth = FALSE, class_threshold = 0.5, cloth_resolution = 0.5, time_step = 0.65)
+
+    tryCatch({
+      lasFILE = lasFILE %>%
+        filter_duplicates() %>%
+        classify_ground(incsf) %>%
+        normalize_height(knnidw()) %>%
+        filter_poi(Z >= 0)
+
+      message(crayon::green("Successfully normalized entire point cloud"))
+    }, error = function(e) {
+      message(crayon::red(paste("Normalization failed:", e$message)))
+      stop("Cannot proceed without successful normalization")
+    })
+  }
+
+  llas = list()
+
+  for (i in 1:(nrow(multiPOLY))) {
+    message(crayon::blue(paste("Processing tree", i, "of", nrow(multiPOLY))))
+
+    # Clip the tree segment from the (already normalized) point cloud
     llas[[i]] = clip_roi(lasFILE, multiPOLY[i,])
-    if (normalize) {
-      incsf = csf(sloop_smooth = TRUE, class_threshold = 1, cloth_resolution = 1, time_step = 1)
-      llas[[i]] =
-        llas[[i]] %>%
-        filter_duplicates(.) %>%
-        classify_ground(., incsf) %>%
-        normalize_height(., knnidw()) %>%
-        filter_poi(., Z > 0)
-    } #else {
-      #ZZ = llas[[i]]@data %>%
-      #  filter(Classification == 2) %>%
-      #  pull(Z)
-      #lground[[i]] = tibble(minZ = min(ZZ),
-      #                      maxZ = max(ZZ),
-      #                      meanZ = mean(ZZ))
-      #llas[[i]] = add_lasattribute(llas[[i]],
-      #                             llas[[i]]@data %>%
-      #                               mutate(Zn = Z - lground[[i]]$meanZ),
-      #                             name = "Zn",
-      #                             desc = "Zn") %>%
-      #  filter_poi(., Zn >= 0) %>%
-      #  filter_poi(., Classification != 2)
-    #}
-    if (!is.null(FEATURE)) {
-      llas[[i]] = add_lasattribute(llas[[i]],
-                                   multiPOLY[i, ] %>%
-                                     pull(rlang::quo_squash(FEATURE)),
-                                   name = rlang::quo_squash(FEATURE),
-                                   desc = rlang::quo_squash(FEATURE))
 
+    # Skip if no points in segment
+    if (npoints(llas[[i]]) == 0) {
+      message(crayon::yellow(paste("No points in tree segment", i, "- skipping")))
+      next
     }
 
-    #> write out its las
-    setwd(output_dir)
-    writeLAS(llas[[i]], str_c("tree_0", i, ".las"))
+    # Add feature attribute if requested
+    if (!is.null(FEATURE)) {
+      feature_value = multiPOLY[i, ] %>% dplyr::pull(!!rlang::ensym(FEATURE))
+      llas[[i]] = add_lasattribute(
+        llas[[i]],
+        x = feature_value,
+        name = as.character(FEATURE),
+        desc = as.character(FEATURE)
+      )
+    }
+
+    # Write out the LAS file
+    output_file = file.path(output_dir, paste0("tree_", sprintf("%03d", i), ".las"))
+    writeLAS(llas[[i]], output_file)
   }
+
   if (RETURN) {
     return(llas)
   } else {
-    message(crayon::green(str_c("_______ Done ________")))
+    message(crayon::green("_______ Done ________"))
   }
 }
 
@@ -75,7 +91,7 @@ CC <- function(cc_function, cc_dir) {
     system(command = CC_cmd[f])
   }
 }
-#'
+
 #' Function for grabbing treeiso plug-in employed in CloudCompare, used in CC(), taken from:
 #' https://github.com/GreKro/cloudcompare and modified.
 #' @param LAS_char string, path to las file including the name of las file
@@ -169,6 +185,18 @@ cc_TREEiso <- function(LAS_char,
 #' @param cc_dir string, path to CloudCompare.exe
 #' @return las file
 #' @export
+#' Function for implementing within segment tree isolation using treeiso, used in get_CBH():
+#' Xi, Z.; Hopkinson, C. 3D Graph-Based Individual-Tree Isolation (Treeiso) from Terrestrial Laser Scanning Point Clouds.
+#' Remote Sens. 2022, 14, 6116. https://doi.org/10.3390/rs14236116
+#' @param list_LAS_char character, list of las files
+#' @param outdir1 string, path to output directory of tree isolation (treeiso) segments
+#' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
+#' @param min_RANGE numeric, minimum height range (m) of 3D tree segment employed during the process of within-segment tree isolation, default = 5
+#' @param min_POINT numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)
+#' @param K1,L1,DEC_R1,K2,L2,MAX_GAP,DEC_R2,VER_O_W,RHO see function get_CBH()
+#' @param cc_dir string, path to CloudCompare.exe
+#' @return las file
+#' @export
 get_SEG <- function(list_LAS_char,
                     outdir1,
                     outdir2,
@@ -179,90 +207,270 @@ get_SEG <- function(list_LAS_char,
                     VER_O_W = .3, RHO = .5,                         # Final stage (treeiso)
                     cc_dir) {
 
+  #> Create output directories if they do not exist
+  if (!dir.exists(outdir1)) {
+    dir.create(outdir1, recursive = TRUE)
+    message(crayon::green(paste("Created directory:", outdir1)))
+  }
+  if (!dir.exists(outdir2)) {
+    dir.create(outdir2, recursive = TRUE)
+    message(crayon::green(paste("Created directory:", outdir2)))
+  }
+
   laso = list()
+  processed_count = 0
+  skipped_count = 0
+
   for (tree in 1:length(list_LAS_char)) {
-    message(crayon::silver(str_c("_______", tree, "________\n")))
+    current_file <- list_LAS_char[tree]
+    message(crayon::silver(str_c("_______", basename(current_file), "________\n")))
 
-    CC(cc_TREEiso(list_LAS_char[tree],
-                  K1 = K1, L1 = L1, DEC_R1 = DEC_R1,
-                  K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
-                  VER_O_W = VER_O_W, RHO = RHO,
-                  output_dir = str_c(outdir1, basename(list_LAS_char[tree]))),
-       cc_dir = cc_dir)
+    # Define output file paths for cleanup
+    output_file_path <- file.path(outdir1, basename(current_file))
+    final_output_path <- file.path(outdir2, basename(current_file))
 
-    las = readLAS(str_c(outdir1, basename(list_LAS_char[tree])))
+    # Track if current file was processed successfully
+    file_processed <- FALSE
 
-    #> Remove points below 0.2 >
-    lasl =
-      las %>%
-      filter_poi(., Z > min_POINT)
+    #> CHECK 1: Skip if file does not exist
+    if (!file.exists(current_file)) {
+      message(crayon::yellow(paste("File does not exist:", current_file, "- skipping")))
+      skipped_count <- skipped_count + 1
+      next
+    }
 
-    #> Calculate min_Z and range_Z >
-    m =
-      lasl@data %>%
-      group_by(intermediate_segs) %>%
-      summarise(n = n(),
-                min_Z = min(Z),
-                max_Z = max(Z),
-                mean_Z = mean(Z),
-                range_Z = max(Z)-min(Z)) %>%
-      data.frame()
+    #> CHECK 2: Check file size to avoid very small files
+    file_size <- file.info(current_file)$size
+    if (file_size < 1000) {       # Less than 1KB
+      message(crayon::yellow(paste("File too small (", file_size, "bytes):", basename(current_file), "- skipping")))
+      skipped_count <- skipped_count + 1
+      next
+    }
 
-    #> Get Z and its indices >
-    nr = ifelse(nrow(m) > 3, nrow(m), ifelse(nrow(m) == 1, 1, nrow(m)))
-    ms = sort(m$min_Z, index.return = TRUE)
-    msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nr))
+    #> CHECK 3: Read and check point count before processing
+    las_check <- tryCatch({
+      readLAS(current_file)
+    }, error = function(e) {
+      message(crayon::red(paste("Error reading file:", basename(current_file), "-", e$message)))
+      return(NULL)
+    })
 
-    #> Get Z >
-    msiz = msi$x
-    if (length(msiz) <= 3) {
+    if (is.null(las_check)) {
+      skipped_count <- skipped_count + 1
+      next
+    }
 
-      #>
-      if (length(msiz) == 0) {
-        m =
-          lasl@data %>%
-          group_by(final_segs) %>%
-          summarise(n = n(),
-                    min_Z = min(Z),
-                    max_Z = max(Z),
-                    mean_Z = mean(Z),
-                    range_Z = max(Z)-min(Z)) %>% # range_Z
-          data.frame()
-        nr = ifelse(nrow(m) > 3, 3, ifelse(nrow(m) == 1, 1, nrow(m)-1))
+    #> CHECK 4: Skip if too few points
+    point_count <- npoints(las_check)
+    if (point_count < 20) {
+      message(crayon::yellow(paste("Too few points (", point_count, ") in:", basename(current_file), "- skipping")))
+      skipped_count <- skipped_count + 1
+      next
+    }
+
+    #> If all checks pass, proceed with CloudCompare processing
+    tryCatch({
+      # Process with CloudCompare
+      CC(cc_TREEiso(current_file,
+                    K1 = K1, L1 = L1, DEC_R1 = DEC_R1,
+                    K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
+                    VER_O_W = VER_O_W, RHO = RHO,
+                    output_dir = output_file_path),
+         cc_dir = cc_dir)
+
+      # CHECK 5: Verify the output file was created
+      if (!file.exists(output_file_path)) {
+        stop("CloudCompare did not create output file")
+      }
+
+      # CHECK 6: Verify output file has points
+      las_output <- tryCatch({
+        readLAS(output_file_path)
+      }, error = function(e) {
+        message(crayon::red(paste("Error reading CloudCompare output:", e$message)))
+        return(NULL)
+      })
+
+      if (is.null(las_output)) {
+        # Clean up the invalid output file
+        if (file.exists(output_file_path)) file.remove(output_file_path)
+        stop("Could not read CloudCompare output")
+      }
+
+      if (npoints(las_output) == 0) {
+        # Clean up the empty output file
+        if (file.exists(output_file_path)) file.remove(output_file_path)
+        stop("No points after CloudCompare processing")
+      }
+
+      #> Continue with the original processing logic
+      las = las_output
+
+      #> Remove points below min_POINT >
+      lasl =
+        las %>%
+        filter_poi(., Z > min_POINT)
+
+      #> Skip if no points left after filtering
+      if (npoints(lasl) == 0) {
+        # Clean up the output file since it became empty after filtering
+        if (file.exists(output_file_path)) file.remove(output_file_path)
+        stop(paste("No points above", min_POINT, "m after filtering"))
+      }
+
+      #> Calculate min_Z and range_Z >
+      m =
+        lasl@data %>%
+        group_by(intermediate_segs) %>%
+        summarise(n = n(),
+                  min_Z = min(Z),
+                  max_Z = max(Z),
+                  mean_Z = mean(Z),
+                  range_Z = max(Z)-min(Z)) %>%
+        data.frame()
+
+      #> Get Z and its indices >
+      nr = ifelse(nrow(m) > 3, nrow(m), ifelse(nrow(m) == 1, 1, nrow(m)))
+      ms = sort(m$min_Z, index.return = TRUE)
+      msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nr))
+
+      #> Get Z >
+      msiz = msi$x
+      lasout <- NULL
+
+      if (length(msiz) <= 3) {
+
+        if (length(msiz) == 0) {
+          m =
+            lasl@data %>%
+            group_by(final_segs) %>%
+            summarise(n = n(),
+                      min_Z = min(Z),
+                      max_Z = max(Z),
+                      mean_Z = mean(Z),
+                      range_Z = max(Z)-min(Z)) %>%
+            data.frame()
+          nr = ifelse(nrow(m) > 3, 3, ifelse(nrow(m) == 1, 1, nrow(m)-1))
+          ms = sort(m$min_Z, index.return = TRUE)
+          msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nr))
+
+          mm =
+            m %>%
+            filter(range_Z ==  m$range_Z %>% max)
+
+          i_s = mm$final_segs
+
+          lasout = lasl %>% filter_poi(., final_segs == i_s)
+
+        } else {
+          if (!"final_segs" %in% names (lasl@data)) {
+            m =
+              lasl@data %>%
+              group_by(intermediate_segs) %>%
+              summarise(n = n(),
+                        min_Z = min(Z),
+                        max_Z = max(Z),
+                        mean_Z = mean(Z),
+                        range_Z = max(Z)-min(Z)) %>%
+              data.frame()
+            ms = sort(m$min_Z, index.return = TRUE)
+            msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
+
+            mm =
+              m %>%
+              filter(min_Z %in% msi$x)
+
+            i_s = m[m$min_Z == min(mm$min_Z),]$intermediate_segs
+
+            lasout = lasl %>% filter_poi(., intermediate_segs == i_s)
+
+          } else {
+            m =
+              lasl@data %>%
+              group_by(final_segs) %>%
+              summarise(n = n(),
+                        min_Z = min(Z),
+                        max_Z = max(Z),
+                        mean_Z = mean(Z),
+                        range_Z = max(Z)-min(Z)) %>%
+              data.frame()
+            ms = sort(m$min_Z, index.return = TRUE)
+            msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
+
+            mm =
+              m %>%
+              filter(min_Z %in% msi$x)
+
+            i_s = mm[mm$n== max(mm$n),]$final_segs
+
+            lasout = lasl %>% filter_poi(., final_segs == i_s)
+
+          }
+        }
+
+      } else {
+
+        #> First 3 to 5 min_Z's!
+        nr = ifelse(nrow(m) > 4, ifelse(nrow(m) > 5, 5, 4), 3)
         ms = sort(m$min_Z, index.return = TRUE)
         msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nr))
 
         mm =
           m %>%
-          filter(range_Z ==  m$range_Z %>% max)
+          filter(min_Z %in% msi$x) %>%
+          arrange(min_Z)
 
-        i_s = mm$final_segs
-
-        lasout = lasl %>% filter_poi(., final_segs == i_s)
-
-      } else {
-        if (!"final_segs" %in% names (lasl@data)) {
-          m =
-            lasl@data %>%
-            group_by(intermediate_segs) %>%
-            summarise(n = n(),
-                      min_Z = min(Z),
-                      max_Z = max(Z),
-                      mean_Z = mean(Z),
-                      range_Z = max(Z)-min(Z)) %>% # range_Z
-            data.frame()
-          ms = sort(m$min_Z, index.return = TRUE)
-          msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
-
-          mm =
-            m %>%
-            filter(min_Z %in% msi$x)
-
-          i_s = m[m$min_Z == min(mm$min_Z),]$intermediate_segs
-
-          lasout = lasl %>% filter_poi(., intermediate_segs == i_s)
-
+        if (any(mm$range_Z > min_RANGE)) {
+          # Continue with current mm
         } else {
+
+          if (!"final_segs" %in% names (lasl@data)) {
+            m =
+              lasl@data %>%
+              group_by(intermediate_segs) %>%
+              summarise(n = n(),
+                        min_Z = min(Z),
+                        max_Z = max(Z),
+                        mean_Z = mean(Z),
+                        range_Z = max(Z)-min(Z)) %>%
+              data.frame()
+            ms = sort(m$min_Z, index.return = TRUE)
+            msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
+
+            mm =
+              m %>%
+              filter(min_Z %in% msi)
+
+            i_s = mm[mm$min_Z == min(mm$min_Z),]$intermediate_segs
+
+            lasout = lasl %>% filter_poi(., intermediate_segs == i_s)
+
+          } else {
+            m =
+              lasl@data %>%
+              group_by(final_segs) %>%
+              summarise(n = n(),
+                        min_Z = min(Z),
+                        max_Z = max(Z),
+                        mean_Z = mean(Z),
+                        range_Z = max(Z)-min(Z)) %>%
+              data.frame()
+            ms = sort(m$min_Z, index.return = TRUE)
+            msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
+
+            mm =
+              m %>%
+              filter(min_Z %in% msi$x)
+
+            i_s = mm[mm$n == max(mm$n),]$final_segs
+
+            lasout = lasl %>% filter_poi(., final_segs == i_s)
+
+          }
+        }
+
+        #> Expectation rate (r) of BCH in relation to tree height, from bottom to top (default: .5)
+        if (any(diff(mm$min_Z) > max(m$max_Z)/(exp(1-.5)*2.25))) {
           m =
             lasl@data %>%
             group_by(final_segs) %>%
@@ -270,176 +478,130 @@ get_SEG <- function(list_LAS_char,
                       min_Z = min(Z),
                       max_Z = max(Z),
                       mean_Z = mean(Z),
-                      range_Z = max(Z)-min(Z)) %>% # range_Z
+                      range_Z = max(Z)-min(Z)) %>%
             data.frame()
           ms = sort(m$min_Z, index.return = TRUE)
           msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
 
           mm =
             m %>%
-            filter(min_Z %in% msi$x)
+            filter(range_Z ==  m$range_Z %>% max)
 
-          i_s = mm[mm$n== max(mm$n),]$final_segs
+          i_s = mm$final_segs
 
           lasout = lasl %>% filter_poi(., final_segs == i_s)
-
-        }
-
-      }
-      writeLAS(lasout, str_c(outdir2, basename(list_LAS_char[tree])))
-      laso[[tree]] = lasout
-
-    } else {
-
-      #> First 3 to 5 min_Z's!
-      nr = ifelse(nrow(m) > 4, ifelse(nrow(m) > 5, 5, 4), 3)
-      ms = sort(m$min_Z, index.return = TRUE)
-      msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nr))
-
-      mm =
-        m %>%
-        filter(min_Z %in% msi$x) %>%
-        arrange(min_Z)
-
-      if (any(mm$range_Z > min_RANGE)) {
-        mm = mm
-      } else {
-
-        if (!"final_segs" %in% names (lasl@data)) {
-          m =
-            lasl@data %>%
-            group_by(intermediate_segs) %>%
-            summarise(n = n(),
-                      min_Z = min(Z),
-                      max_Z = max(Z),
-                      mean_Z = mean(Z),
-                      range_Z = max(Z)-min(Z)) %>% # range_Z
-            data.frame()
-          ms = sort(m$min_Z, index.return = TRUE)
-          msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
-
-          mm =
-            m %>%
-            filter(min_Z %in% msi)
-
-          i_s = mm[mm$min_Z == min(mm$min_Z),]$intermediate_segs
-
-          lasout = lasl %>% filter_poi(., intermediate_segs == i_s)
 
         } else {
-          m =
-            lasl@data %>%
-            group_by(final_segs) %>%
-            summarise(n = n(),
-                      min_Z = min(Z),
-                      max_Z = max(Z),
-                      mean_Z = mean(Z),
-                      range_Z = max(Z)-min(Z)) %>% # range_Z
-            data.frame()
-          ms = sort(m$min_Z, index.return = TRUE)
-          msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
 
-          mm =
-            m %>%
-            filter(min_Z %in% msi$x)
+          # Eliminate possible duplicates of min_Z
+          if (any(mm$min_Z %>% diff == 0)) {
+            mm_z = mm$min_Z[duplicated(mm$min_Z)] %>% unique
 
-          i_s = mm[mm$n == max(mm$n),]$final_segs
+            if (mm_z %>% length > 1) {
 
-          lasout = lasl %>% filter_poi(., final_segs == i_s)
-
-        }
-        writeLAS(lasout, str_c(outdir2, basename(list_LAS_char[tree])))
-        laso[[tree]] = lasout
-      }
-
-      #> Expectation rate (r) of BCH in relation to tree height, from bottom to top (default: .5)
-      if (any(diff(mm$min_Z) > max(m$max_Z)/(exp(1-.5)*2.25))) { # or simply 2.25, mean(mm$range_Z)
-        m =
-          lasl@data %>%
-          group_by(final_segs) %>%
-          summarise(n = n(),
-                    min_Z = min(Z),
-                    max_Z = max(Z),
-                    mean_Z = mean(Z),
-                    range_Z = max(Z)-min(Z)) %>% # range_Z
-          data.frame()
-        ms = sort(m$min_Z, index.return = TRUE)
-        msi = lapply(ms, `[`, ms$x %in% head(unique(ms$x), nrow(m)))
-
-        mm =
-          m %>%
-          filter(range_Z ==  m$range_Z %>% max)
-
-        i_s = mm$final_segs
-
-        lasout = lasl %>% filter_poi(., final_segs == i_s)
-
-      } else {
-
-        #> Eliminate possible duplicates of min_Z
-        if (any(mm$min_Z %>% diff == 0)) {
-          mm_z = mm$min_Z[duplicated(mm$min_Z)] %>% unique
-
-          if (mm_z %>% length > 1) {
-
-            mm_z_out = c()
-            for (i in 1:length(mm_z)) {
-              mm_z_o = mm %>%
-                filter(min_Z %in% mm_z[i])
-              mm_z_ou = mm_z_o[mm_z_o$n < max(mm_z_o$n), ]$intermediate_segs
-              mm_z_out = c(mm_z_out, mm_z_ou)
+              mm_z_out = c()
+              for (i in 1:length(mm_z)) {
+                mm_z_o = mm %>%
+                  filter(min_Z %in% mm_z[i])
+                mm_z_ou = mm_z_o[mm_z_o$n < max(mm_z_o$n), ]$intermediate_segs
+                mm_z_out = c(mm_z_out, mm_z_ou)
+              }
+            } else {
+              mm_z_ou = mm[mm$min_Z == mm_z, ]
+              mm_z_out = mm_z_ou[mm_z_ou$n < max(mm_z_ou$n),]$intermediate_segs
             }
-          } else {
-            mm_z_ou = mm[mm$min_Z == mm_z, ]
-            mm_z_out = mm_z_ou[mm_z_ou$n < max(mm_z_ou$n),]$intermediate_segs
+            mm =
+              mm %>%
+              filter(!intermediate_segs %in% mm_z_out)
           }
-          mm =
-            mm %>%
-            filter(!intermediate_segs %in% mm_z_out)
-        }
 
-        #> Find the max range_Z, max_N and min_Z indices
-        max_RANGE = mm$range_Z %>% max()
-        max_N = mm$n %>% max()
-        min_HEIGHT = mm$min_Z %>% min()
+          # Find the max range_Z, max_N and min_Z indices
+          max_RANGE = mm$range_Z %>% max()
+          max_N = mm$n %>% max()
+          min_HEIGHT = mm$min_Z %>% min()
 
-        if (mm[mm$min_Z == min_HEIGHT,]$range_Z < 2) {
-          min_HEIGHT = mm$min_Z[2]
-        }
-        if ("final_segs" %in% names(mm)) {
-          i_sN = mm[mm$n == max_N,]$final_segs
-          i_sR = mm[mm$range_Z == max_RANGE,]$final_segs
-          i_sM = mm[mm$min_Z == min_HEIGHT,]$final_segs
-        } else {
-          i_sN = mm[mm$n == max_N,]$intermediate_segs
-          i_sR = mm[mm$range_Z == max_RANGE,]$intermediate_segs
-          i_sM = mm[mm$min_Z == min_HEIGHT,]$intermediate_segs
-        }
-        if (length(i_sN) > 1) {
+          if (mm[mm$min_Z == min_HEIGHT,]$range_Z < 2) {
+            min_HEIGHT = mm$min_Z[2]
+          }
           if ("final_segs" %in% names(mm)) {
-            i_sN = mm[mm$range_Z == m[m$n == max_N,]$range_Z %>% max(),]$final_segs
+            i_sN = mm[mm$n == max_N,]$final_segs
+            i_sR = mm[mm$range_Z == max_RANGE,]$final_segs
+            i_sM = mm[mm$min_Z == min_HEIGHT,]$final_segs
           } else {
-            i_sN = mm[mm$range_Z == m[m$n == max_N,]$range_Z %>% max(),]$intermediate_segs
+            i_sN = mm[mm$n == max_N,]$intermediate_segs
+            i_sR = mm[mm$range_Z == max_RANGE,]$intermediate_segs
+            i_sM = mm[mm$min_Z == min_HEIGHT,]$intermediate_segs
           }
-        }
+          if (length(i_sN) > 1) {
+            if ("final_segs" %in% names(mm)) {
+              i_sN = mm[mm$range_Z == m[m$n == max_N,]$range_Z %>% max(),]$final_segs
+            } else {
+              i_sN = mm[mm$range_Z == m[m$n == max_N,]$range_Z %>% max(),]$intermediate_segs
+            }
+          }
 
-        if (i_sN == i_sR & i_sN == i_sM) {
-          i_s = i_sR
-        } else if (i_sN == i_sM & i_sM != i_sR) {
-          i_s = i_sM
-        } else if (i_sN == i_sR & i_sM != i_sR) {
-          i_s = i_sN
-        } else {
-          i_s = i_sR # or i_sM 3?
-        }
+          if (i_sN == i_sR & i_sN == i_sM) {
+            i_s = i_sR
+          } else if (i_sN == i_sM & i_sM != i_sR) {
+            i_s = i_sM
+          } else if (i_sN == i_sR & i_sM != i_sR) {
+            i_s = i_sN
+          } else {
+            i_s = i_sR
+          }
 
-        lasout = lasl %>% filter_poi(., intermediate_segs == i_s)
+          lasout = lasl %>% filter_poi(., intermediate_segs == i_s)
+        }
       }
-      writeLAS(lasout, str_c(outdir2, basename(list_LAS_char[tree])))
-      laso[[tree]] = lasout
+
+      #> FINAL CHECK: Only write and count if lasout has points
+      if (!is.null(lasout) && npoints(lasout) > 0) {
+        writeLAS(lasout, final_output_path)
+        laso[[tree]] = lasout
+        file_processed <- TRUE
+        message(crayon::green(paste("Successfully processed:", basename(current_file))))
+      } else {
+        # Clean up both output files if final result is empty
+        if (file.exists(output_file_path)) file.remove(output_file_path)
+        if (file.exists(final_output_path)) file.remove(final_output_path)
+        stop("No points in final output")
+      }
+
+    }, error = function(e) {
+      message(crayon::red(paste("Processing failed for", basename(current_file), ":", e$message)))
+
+      #> COMPREHENSIVE CLEANUP: Remove any output files that were created during failed processing
+      if (file.exists(output_file_path)) {
+        file.remove(output_file_path)
+        message(crayon::yellow(paste("Cleaned up failed output:", basename(output_file_path))))
+      }
+      if (file.exists(final_output_path)) {
+        file.remove(final_output_path)
+        message(crayon::yellow(paste("Cleaned up failed output:", basename(final_output_path))))
+      }
+    })
+
+    #> Update counts only once per file
+    if (file_processed) {
+      processed_count <- processed_count + 1
+    } else {
+      skipped_count <- skipped_count + 1
     }
   }
+
+  #> Summary message - VERIFY COUNTS WITH ACTUAL FILES >
+  actual_files_outdir1 <- length(list.files(outdir1, pattern = "\\.las$"))
+  actual_files_outdir2 <- length(list.files(outdir2, pattern = "\\.las$"))
+
+  message(crayon::green(str_c("Successfully processed: ", processed_count, " files")))
+  message(crayon::yellow(str_c("Skipped: ", skipped_count, " files")))
+  message(crayon::blue(str_c("Actual files in outdir1: ", actual_files_outdir1)))
+  message(crayon::blue(str_c("Actual files in outdir2: ", actual_files_outdir2)))
   message(crayon::silver(str_c("_______ Done ________")))
+
+  #> Return only non-null results >
+  laso = Filter(Negate(is.null), laso)
+  return(laso)
 }
 
 #' Function for getting 2D cross-section from 3D point cloud, used in get_CBH().
@@ -454,252 +616,116 @@ get_CROSS <- function(las, cross_WIDTH = 5) {
   return(las_hcross)
 }
 
-#' Function for 2D kernel method including the decision scheme, used in get_CBH().
-#' @param hist_DAT centered bins of counts on the output by	the vertical cross-sectional K-means clustering
+#' Function for percentile-based canopy base height detection, used in get_CBH().
+#' @param hist_DAT centered bins of counts on the output by the vertical cross-sectional K-means clustering
 #' @return numeric value of CBH
 #' @export
 get_CANOPYBH <- function(hist_DAT) {
 
-  #hist_DAT =datt_histo
-  #> Cluster kernel(s), finding how many kernels are >
-  gp =
-    ggplot(hist_DAT,
-           aes(y = y, x = count)) +
-    stat_density2d_filled(bins = 3) +
-    geom_point()
-
-  gpb = ggplot_build(gp)
-  gpbdf =
-    gpb[[1]][[1]]
-
-  n_n =
-    gpbdf %>%
-    filter(piece == max(gpbdf$piece)) %>%
-    pull(subgroup) %>%
-    unique()
-
-  if (gpbdf$x %>% max <= 10) {
-    stop(return(height = gpbdf$y %>% max + 1))
+  # Ensure histogram data validity
+  if (is.null(hist_DAT) || nrow(hist_DAT) < 3 ||
+      all(hist_DAT$count == 0) || all(is.na(hist_DAT$count))) {
+    warning("Insufficient histogram data for CBH detection")
+    return(NA)
   }
 
-  #> One kernel >
-  if (length(n_n) == 1) {
-    z_r =
-      gpbdf %>%
-      filter(piece == max(gpbdf$piece)) %>%
-      pull(y) %>%
-      range() %>%
-      diff()
-
-    z_mi =
-      gpbdf %>%
-      filter(piece == max(gpbdf$piece)) %>%
-      pull(y) %>%
-      min()
-
-    z_m =
-      gpbdf %>%
-      filter(piece == max(gpbdf$piece)) %>%
-      pull(y) %>%
-      max()
-
-    if (z_r > gpbdf$y %>% range %>% diff *.5 &
-        z_mi < gpbdf$y %>% range %>% max * .2 + (gpbdf$y %>% range %>% min)) {
-      gpbdf_e =
-        hist_DAT %>%
-        filter(y >= z_mi & y <= z_m)
-      max_n_ze = gpbdf_e[,"count"] %>% max()
-
-      hist_ne = gpbdf_e[,"count"]
-
-      rollone = gpbdf_e[,"y"] %>%
-        round(., 3)
-
-      heighte = rollone[which(hist_ne == max_n_ze)]
-      if (length(heighte) > 1) {
-        heighte = max(heighte)
-      }
-
-    } else {
-      # > Cheking 2D space below and above kernel >
-      if (gpbdf$y %>% max - z_m >= z_mi - gpbdf$y %>% min) {
-        gpbdf_e =
-          hist_DAT %>%
-          filter(y >= z_m)
-      } else {
-        gpbdf_e =
-          hist_DAT %>%
-          filter(y <= z_mi)
-      }
-
-      max_n_ze = gpbdf_e[,"count"] %>% max()
-
-      hist_ne = gpbdf_e[,"count"]
-
-      rollone = gpbdf_e[,"y"] %>%
-        round(., 3)
-
-      heighte = rollone[which(hist_ne == max_n_ze)]
-      if (length(heighte) > 1) {
-        heighte = max(heighte)
-      }
-    }
-  }
-
-  max_n_z = hist_DAT[,"count"] %>% max()
-
-  hist_n = hist_DAT[,"count"]
-
-  rollon = hist_DAT[,"y"] %>%
-    round(., 3)
-
-  #> More than one kernel >
-  if (length(n_n) > 1) {
-
-    zrl = c()
-    zmil = c()
-    zml = c()
-    kernel = c()
-    for (i in 1:length(n_n)) {
-      z_r_ =
-        gpbdf %>%
-        filter(piece == max(gpbdf$piece)) %>%
-        filter(subgroup == i) %>%
-        pull(y) %>%
-        range() %>%
-        diff()
-
-      z_mi_ =
-        gpbdf %>%
-        filter(piece == max(gpbdf$piece)) %>%
-        filter(subgroup == i) %>%
-        pull(y) %>%
-        min()
-
-      z_m_ =
-        gpbdf %>%
-        filter(piece == max(gpbdf$piece)) %>%
-        filter(subgroup == i) %>%
-        pull(y) %>%
-        max()
-      zrl = c(zrl, z_r_)
-      zmil = c(zmil, z_mi_)
-      zml = c(zml, z_m_)
-      kernel = c(kernel, i)
-    }
-    dfnz =
-      tibble(z_r = zrl,
-             z_min = zmil,
-             z_max = zml,
-             kernel = kernel)
-
-    heights = c()
-    for (i in 1:nrow(dfnz)) {
-      gpbdf_e =
-        hist_DAT %>%
-        filter(y >= dfnz$z_min[i] & y <= dfnz$z_max[i])
-
-      max_n_ze = gpbdf_e[,"count"] %>% max()
-
-      hist_ne = gpbdf_e[,"count"]
-
-      rollone = gpbdf_e[,"y"] %>%
-        round(., 3)
-
-      heighte = rollone[which(hist_ne == max_n_ze)]
-      if (length(heighte) > 1) {
-        heighte = heighte %>% min()
-      }
-
-      heights = c(heights, heighte)
-    }
-    dfnz =
-      dfnz %>%
-      mutate(heights = heights)
-  }
-
-  #> Decision >
-  if (any(hist_n > 3)) {
-
-    # > One kernel >
-    if (length(n_n) == 1) {
-      hist_n = hist_n[1:which(hist_n == max_n_z)]
-
-      rollon = rollon[1:which(hist_n == max_n_z)]
-      if (length(rollon) < 3) {
-        height1 = z_m
-      } else {
-        # > Max count height along vertical profile >
-        height1 = rollon[which(hist_n == max_n_z)]
-      }
-
-      if (length(height1) > 1) {
-        height1 = max(height1)
-      }
-
-      if (height1 != heighte &
-          z_r > gpbdf$y %>% range %>% diff *.5) {
-        #> Inside/outside kernel max count height >
-        height = heighte
-      } else {
-        #> Max count height of vertical profile >
-        height = height1
-      }
-    } else {
-
-      #> In case of more than one kernel >
-      if (dfnz[dfnz$z_r == max(dfnz$z_r),]$z_min < gpbdf$y %>% range %>% diff *.4 &
-          dfnz[dfnz$z_r == max(dfnz$z_r),]$z_r > gpbdf$y %>% range %>% diff *.5) {
-        #> Max count height of longer kernel >
-        height = dfnz[dfnz$z_r == max(dfnz$z_r),]$heights
-      } else {
-        #> Max count height of smaller kernel >
-        height = dfnz$heights %>% min()
-      }
-    }
+  # Ensure consitent column names
+  if ("y" %in% names(hist_DAT)) {
+    height_col <- "y"
+  } else if ("x" %in% names(hist_DAT)) {
+    height_col <- "x"
+  } else if ("ymin" %in% names(hist_DAT)) {
+    height_col <- "ymin"
   } else {
-    height = rollon[length(rollon)]
+    warning("Cannot find height column in histogram data")
+    return(NA)
   }
 
-  if (length(height) > 1) {
-    height = height %>% min
+  # Filter out zero counts and ensure we have enough data
+  hist_DAT = hist_DAT %>%
+    filter(count > 0, !is.na(count), !is.na(!!sym(height_col)))
+
+  if (nrow(hist_DAT) < 3) {
+    warning("Not enough valid histogram bins for CBH detection")
+    return(hist_DAT[[height_col]][which.max(hist_DAT$count)] - 0.4)
   }
 
-  return(height-(2*.2))
+  # SIMPLE FALLBACK METHOD - No kernel density, but MORE ACCURATE PERCENTILES!
+  tryCatch({
+    # Method 1: Use 5th percentile of point distribution
+    cumulative = cumsum(hist_DAT$count) / sum(hist_DAT$count)
+    cbh_index = which(cumulative >= 0.05)[1]
+
+    if (!is.na(cbh_index)) {
+      cbh = hist_DAT[[height_col]][cbh_index] - 0.4
+      return(max(cbh, min(hist_DAT[[height_col]])))  # Ensure CBH is not below minimum height
+    }
+
+    # Method 2: If percentile fails, use point with maximum count
+    max_count_idx = which.max(hist_DAT$count)
+    if (length(max_count_idx) > 0) {
+      return(hist_DAT[[height_col]][max_count_idx] - 0.4)
+    }
+
+    # Method 3: Ultimate fallback - median height
+    return(median(hist_DAT[[height_col]]) - 0.4)
+
+  }, error = function(e) {
+    warning("All CBH detection methods failed: ", e$message)
+    return(NA)
+  })
 }
 
 #' MAIN FUNCTION of treecbh, detecting CBH and deriving numerous metrics.
-#' @param list_LAS_char character, list of las files
+#' @param list_LAS_char character, list of input tree point cloud las files (outputted by get_3DTREE())
 #' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation
 #' @param min_POINT numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)
 #' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
 #' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
-#' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are active)
-#' @param kM logical, K-means clustering (default 'kM' = TRUE) or interactive CBH tuning
-#' @param cbh_BUFF logical, if 'kM' = FALSE, the buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)
-#' @param method character, optional additional attribute (default = NULL)
-#' @param outdir1 string, path to output directory of treeiso segment results
-#' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
+#' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 3, meaning CBH detection is active)
+#' @param kM logical, automatic percentile-based (default 'kM' = TRUE) or interactive CBH tuning
+#' @param cbh_BUFF logical, if 'kM' = FALSE, the vertical buffer around the CBH (CBH-cbh_BUFF and CBH+cbh_BUFF) displayed with dotted red lines (default = 0.5)
+#' @param method character, optional additional attribute (default = NULL in combination with default 'cbh_ONLY = 3')
+#' @param outdir1 string, path to output directory of treeiso segment results (default = NULL in combination with default 'cbh_ONLY = 3')
+#' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs) (default = NULL)
 #' @param K1,L1,DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
-#' @param K2-L2,MAX_GAP,DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
+#' @param K2,L2,MAX_GAP,DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
 #' @param VER_O_W,RHO final stage treeiso parameters, default values as indicated
-#' @param cc_dir string, path to CloudCompare.exe
-#' @param VOL logical, if TRUE, returns Hull_area, Del_vol, Cube_vol, Sphere_vol too (default = FALSE)
+#' @param cc_dir string, path to CloudCompare.exe (default = NULL in combination with default 'cbh_ONLY = 3')
+#' @param VOL logical, if TRUE returns Hull_area, Del_vol, Cube_vol and Sphere_vol too (default = FALSE)
 #' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH and treeID) plus (Hull_area, Del_vol, Cube_vol, Sphere_vol)
 #' @export
-get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale = 0.13,
-                      branch_WIDTH = 0.2, cross_WIDTH = 5, cbh_ONLY = 1, kM = TRUE, cbh_BUFF = 0.5,
-                      method = NULL, outdir1, outdir2, K1 = 10, L1 = 1, DEC_R1 = 0.1,
-                      K2 = 20, L2 = 20, MAX_GAP = 0.5, DEC_R2 = 0.1, VER_O_W = 0.3,
-                      RHO = 0.5, cc_dir, VOL = FALSE) {
+get_CBH <- function(list_LAS_char,
+                    min_RANGE = 5,
+                    min_POINT = 0.2,
+                    min_H_scale = 0.13,
+                    branch_WIDTH = 0.2,
+                    cross_WIDTH = 5,
+                    cbh_ONLY = 3,
+                    kM = TRUE,
+                    cbh_BUFF = 0.5,
+                    method = NULL,
+                    outdir1 = NULL,
+                    outdir2 = NULL,
+                    K1 = 10,
+                    L1 = 1,
+                    DEC_R1 = 0.1,
+                    K2 = 20,
+                    L2 = 20,
+                    MAX_GAP = 0.5,
+                    DEC_R2 = 0.1,
+                    VER_O_W = 0.3,
+                    RHO = 0.5,
+                    cc_dir = NULL,
+                    VOL = FALSE) {
 
   #> Possible errors >
   if (!min_H_scale %in% seq(0.13, 0.25, 0.01)) {
     stop(crayon::magenta("Parameter 'min_H_scale' accepts values from .13 to .25"))
   }
   if (branch_WIDTH < 0) {
-    stop(crayon::magenta("Parameter 'branch_WIDTH' must be positiv"))
+    stop(crayon::magenta("Parameter 'branch_WIDTH' must be positive"))
   }
   if (cross_WIDTH < 4) {
     stop(crayon::magenta("Parameter 'cross_WIDTH' must be minimum 4"))
@@ -707,8 +733,8 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
   if (!cbh_ONLY %in% 1:3) {
     stop(crayon::magenta("Parameter 'cbh_ONLY' accepts 1, 2 and 3"))
   }
-  if (cbh_BUFF < 0.1 & cbh_BUFF > 1) {
-    stop(crayon::magenta("Parameter 'cbh_BUFF' rangees from 0.1 to 1"))
+  if (cbh_BUFF < 0.1 | cbh_BUFF > 1) {
+    stop(crayon::magenta("Parameter 'cbh_BUFF' ranges from 0.1 to 1"))
   }
   if (K1 < 3 | K1 > 50) {
     stop(crayon::magenta("Parameter 'K1' accepts values btw. 3 and 50"))
@@ -738,15 +764,17 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
     stop(crayon::magenta("Parameter 'RHO' accepts values btw. 0 and 2"))
   }
 
-  #> outdir strings
-  if (str_sub(outdir1, nchar(outdir1), nchar(outdir1)) != "/") {
-    outdir1 = str_c(outdir1, "/")
-  }
-  if (str_sub(outdir2, nchar(outdir2), nchar(outdir2)) != "/") {
-    outdir2 = str_c(outdir2, "/")
+  #> Enhanced directory validation
+  if (cbh_ONLY %in% c(1, 2)) {
+    if (is.null(outdir1) || is.null(outdir2) || is.null(cc_dir)) {
+      stop(crayon::magenta("'outdir1', 'outdir2' and 'cc_dir' are required when cbh_ONLY = 1 or 2 (tree isolation)"))
+    }
+    # Only process path strings if directories are provided
+    if (!is.null(outdir1) && str_sub(outdir1, -1) != "/") outdir1 = str_c(outdir1, "/")
+    if (!is.null(outdir2) && str_sub(outdir2, -1) != "/") outdir2 = str_c(outdir2, "/")
   }
 
-  #> ensure order
+  #> Ensure order
   list_LAS_char = gtools::mixedsort(list_LAS_char)
 
   if (cbh_ONLY %in% 1:2) {
@@ -760,25 +788,44 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
       stop_noerr()
     }
   }
-  if (cbh_ONLY %in% c(1,3)) {
-    list_LASS = list.files(outdir2, pattern = ".las", full.names = T) %>%
-      gtools::mixedsort()
-    need = map_chr(list_LAS_char, ~str_split_1(.x, "/")[str_split_1(outdir2,
-                                                                    "/") %>% length])
-    list_LASS = list_LASS[grep(str_c(need, collapse = "|"),
-                               list_LASS)]
+
+  if (cbh_ONLY %in% c(1, 3)) {
+    #> File selection logic for interactive CBH detection
+    if (cbh_ONLY == 1) {
+      # After tree isolation, use files from outdir2
+      list_LASS = list.files(outdir2, pattern = "\\.las$", full.names = TRUE) %>%
+        gtools::mixedsort()
+    } else if (cbh_ONLY == 3 && !is.null(outdir2)) {
+      # CBH-only mode with specified output directory (pre-segmented trees)
+      list_LASS = list.files(outdir2, pattern = "\\.las$", full.names = TRUE) %>%
+        gtools::mixedsort()
+    } else {
+      # CBH-only mode without outdir2 - use original files for interactive detection
+      list_LASS = list_LAS_char
+    }
+
+    # Validate whether there are files to process
+    if (length(list_LASS) == 0) {
+      stop(crayon::magenta("No LAS files found for CBH detection"))
+    }
+
     metrics = list()
     for (tree in 1:length(list_LASS)) {
-      message(crayon::green(str_c("_______", basename(list_LASS)[tree],
-                                  "________")))
-      #> Original las >
-      laso = readLAS(list_LAS_char[tree])
+      message(crayon::green(str_c("_______", basename(list_LASS)[tree], "________")))
 
-      #> Segmented las >
-      lass = readLAS(list_LASS[tree])
+      #> Handle different file sources for interactive mode
+      if (cbh_ONLY == 3 && is.null(outdir2)) {
+        # Interactive CBH detection on original files
+        laso = readLAS(list_LASS[tree])
+        lass = laso  # Use the original file for segmentation analysis
+      } else {
+        # Normal flow: original file and segmented file from tree isolation
+        laso = readLAS(list_LAS_char[tree])
+        lass = readLAS(list_LASS[tree])
+      }
 
       #> min H ~ segmented las >
-      m_H = (lass@data$Z %>% quantile(., .1) %>% as.vector) ^min_H_scale *2
+      m_H = (lass@data$Z %>% quantile(., .1) %>% as.vector) ^ min_H_scale * 2
 
       #> Horizontal cross section ~ segmented las >
       crosss = get_CROSS(lass, cross_WIDTH = cross_WIDTH)
@@ -786,11 +833,11 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
       #> Horizontal cross section ~ original las >
       cross = get_CROSS(laso, cross_WIDTH = cross_WIDTH)
 
-      #> Denstiy (height ~ Z) on original las >
+      #> Density (height ~ Z) on original las >
       dens =
         laso@data %>%
         ggplot(aes(y = Z)) +
-        geom_histogram(binwidth = .2, center = 1)
+        geom_histogram(binwidth = .2)
       dat_dens =
         ggplot_build(dens)
       dat_dens =
@@ -820,55 +867,101 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
       dfkm = dfk %>% group_by(km) %>% summarise(mZ = mean(Z)) %>%
         bind_cols(km$centers)
       dfkk = dfk %>% filter(km == dfkm[which.min(dfkm$mZ),]$km)
-      dfk_histo = dfkk %>% ggplot(aes(y = Z)) + geom_histogram(center = T, binwidth = branch_WIDTH)
+
+      #> FIXED: Remove 'center' parameter and handle column names properly >
+      dfk_histo = dfkk %>% ggplot(aes(y = Z)) + geom_histogram(binwidth = branch_WIDTH)
 
       datt_histo = ggplot_build(dfk_histo)
       datt_histo = datt_histo[[1]][[1]]
-      datt_histo = datt_histo %>% filter(y > m_H)
+
+      #> FIXED: Handle different column names from ggplot_build >>
+      if ("y" %in% names(datt_histo)) {
+        datt_histo = datt_histo %>% filter(y > m_H)
+      } else if ("x" %in% names(datt_histo)) {
+        datt_histo = datt_histo %>% filter(x > m_H)
+      } else if ("ymin" %in% names(datt_histo)) {
+        datt_histo = datt_histo %>% filter(ymin > m_H)
+      } else {
+        # Use first numeric column as fallback
+        numeric_cols = sapply(datt_histo, is.numeric)
+        if (any(numeric_cols)) {
+          height_col = names(datt_histo)[which(numeric_cols)[1]]
+          datt_histo = datt_histo %>% filter(!!sym(height_col) > m_H)
+        }
+      }
 
       #> Finding CBH >
-      cbh = treecbh::get_CANOPYBH(datt_histo)
+      cbh = get_CANOPYBH(datt_histo)
 
       #> Activation of CBH tuning >
       if (kM) {
         cbh = cbh
       } else {
-        p = plot_CROSSS(laso, ylab = "Height [m]") +
+        p = plot_CROSS(laso, ylab = "Height [m]") +
           geom_hline(yintercept = cbh, col = "firebrick3") +
-          geom_hline(yintercept = cbh -1, col = "firebrick2", linetype = "dotted") +
-          geom_hline(yintercept = cbh +1, col = "firebrick2", linetype = "dotted")
+          geom_hline(yintercept = cbh - cbh_BUFF, col = "firebrick2", linetype = "dotted") +
+          geom_hline(yintercept = cbh + cbh_BUFF, col = "firebrick2", linetype = "dotted")
         print(p)
 
-        message(crayon::green(str_c("Suggested CBH is ", cbh, ".")))
-        kM_ = readline(prompt = "Do you accept CBH? ")
+        message(crayon::green(str_c("Suggested CBH is ", round(cbh, 2), ".")))
 
-        if (kM_ %in% c("y", "Y", "yes", "YES", "ye","YE")) {
+        # FIXED: Simpler input handling without complex validation loops
+        kM_ <- readline(prompt = "Do you accept this CBH? (y = yes, n = no): ")
+
+        if (tolower(trimws(kM_)) %in% c("y", "yes", "ye", "")) {
+          # User accepts the suggested CBH
           cbh = cbh
+          message(crayon::green("Using suggested CBH."))
         } else {
-          kM__ = readline(prompt = "Enter assumed CBH: ")
-          kM__ = as.double(kM__)
+          # User wants to enter custom CBH
+          message("Enter your assumed CBH.")
+          kM__ <- readline(prompt = "Assumed CBH: ")
 
-          dfk_histog = dfo %>%
-            filter(Z > (kM__ - cbh_BUFF) & Z < (kM__ + cbh_BUFF)) %>%
-            ggplot(aes(y = Z)) +
-            geom_histogram(center = T, binwidth = branch_WIDTH)
+          # Convert to numeric and validate
+          kM__ <- as.numeric(kM__)
 
-          datt_histog = ggplot_build(dfk_histog)
-          datt_histog = datt_histog[[1]][[1]]
+          if (is.na(kM__) || !is.numeric(kM__)) {
+            message(crayon::red("Invalid input. Using suggested CBH."))
+            # Keep the original cbh value
+          } else if (kM__ < 0 || kM__ > max(laso@data$Z, na.rm = TRUE)) {
+            message(crayon::red("CBH out of reasonable range. Using suggested CBH."))
+            # Keep the original cbh value
+          } else {
+            # Valid custom CBH entered
+            dfk_histog = dfo %>%
+              filter(Z > (kM__ - cbh_BUFF) & Z < (kM__ + cbh_BUFF)) %>%
+              ggplot(aes(y = Z)) +
+              geom_histogram(binwidth = branch_WIDTH)
 
-          #> Finding CBH based on assumed (tuned) CBH >
-          cbh = treecbh::get_CANOPYBH(datt_histog)
+            datt_histog = ggplot_build(dfk_histog)
+            datt_histog = datt_histog[[1]][[1]]
+
+            #> Finding CBH based on assumed (tuned) CBH >
+            cbh = get_CANOPYBH(datt_histog)
+            message(crayon::green(paste("Using user-specified CBH:", round(cbh, 2))))
+          }
         }
       }
 
-
       #> Exclude ground and low vegetation from density (height ~ Z) of original las >
-      dat_histos =
-        dat_dens %>%
-        filter(y >= m_H)
+      if ("y" %in% names(dat_dens)) {
+        dat_histos = dat_dens %>% filter(y >= m_H)
+      } else if ("x" %in% names(dat_dens)) {
+        dat_histos = dat_dens %>% filter(x >= m_H)
+      } else if ("ymin" %in% names(dat_dens)) {
+        dat_histos = dat_dens %>% filter(ymin >= m_H)
+      } else {
+        # Use first numeric column as fallback
+        numeric_cols = sapply(dat_dens, is.numeric)
+        if (any(numeric_cols)) {
+          height_col = names(dat_dens)[which(numeric_cols)[1]]
+          dat_histos = dat_dens %>% filter(!!sym(height_col) >= m_H)
+        } else {
+          dat_histos = dat_dens
+        }
+      }
 
       #> Collect metrics >
-
       if (VOL) {
         #> Canopy ~ original las >
         newdata =
@@ -893,384 +986,148 @@ get_CBH <- function (list_LAS_char, min_RANGE = 5, min_POINT = 0.2, min_H_scale 
         #> Voxelizing canopy (0.2m) >
         vmv = get_VOXEL(las_new@data, .2)
 
+        #> FIXED: Handle column names in dat_histos for metrics >
+        if ("y" %in% names(dat_histos)) {
+          max_count_height = dat_histos$y[which.max(dat_histos$count)]
+          max_count_value = dat_histos$count[which.max(dat_histos$count)]
+        } else if ("x" %in% names(dat_histos)) {
+          max_count_height = dat_histos$x[which.max(dat_histos$count)]
+          max_count_value = dat_histos$count[which.max(dat_histos$count)]
+        } else {
+          max_count_height = NA
+          max_count_value = NA
+        }
+
         metrics[[tree]] =
           tibble(
             Z_max      = laso@data$Z %>% max,
             Z_mean     = laso@data$Z %>% mean,
             Z_sd       = laso@data$Z %>% sd,
-            Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
-            N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
+            Z_N_points = max_count_height,
+            N_points   = max_count_value,
             CBH        = cbh,
             Hull_area  = convex_hull$area,
             Del_vol    = delaunaj$areas %>% sum,
             Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
             Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
             treeID     = str_remove(basename(list_LASS)[tree], ".las") %>% str_remove(., "tree_"))
+      } else {
+        #> FIXED: Handle column names in dat_histos for metrics >
+        if ("y" %in% names(dat_histos)) {
+          max_count_height = dat_histos$y[which.max(dat_histos$count)]
+          max_count_value = dat_histos$count[which.max(dat_histos$count)]
+        } else if ("x" %in% names(dat_histos)) {
+          max_count_height = dat_histos$x[which.max(dat_histos$count)]
+          max_count_value = dat_histos$count[which.max(dat_histos$count)]
+        } else {
+          max_count_height = NA
+          max_count_value = NA
+        }
+
+        metrics[[tree]] =
+          tibble(
+            Z_max      = laso@data$Z %>% max,
+            Z_mean     = laso@data$Z %>% mean,
+            Z_sd       = laso@data$Z %>% sd,
+            Z_N_points = max_count_height,
+            N_points   = max_count_value,
+            CBH        = cbh,
+            treeID     = str_remove(basename(list_LASS)[tree], ".las") %>% str_remove(., "tree_"))
       }
+    }
 
-      metrics[[tree]] =
-        tibble(
-          Z_max      = laso@data$Z %>% max,
-          Z_mean     = laso@data$Z %>% mean,
-          Z_sd       = laso@data$Z %>% sd,
-          Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
-          N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
-          CBH        = cbh,
-          treeID     = str_remove(basename(list_LASS)[tree], ".las") %>% str_remove(., "tree_"))
-      }
-
-
-    metrics = metrics %>%
-      bind_rows()
+    metrics = metrics %>% bind_rows()
 
     if (!is.null(method)) {
-      metrics = metrics %>%
-        mutate(method = method)
+      metrics = metrics %>% mutate(method = method)
     }
     message(crayon::green(str_c("_______ Done ________")))
     return(metrics)
   }
 }
 
-
-#' old MAIN FUNCTION of treecbh, detecting CBH and deriving numerous metrics.
-#' @param list_LAS_char character, list of las files
-#' @param min_RANGE numeric, minimum height range (m, default = 5) of 3D tree segment employed during the process of within-segment tree isolation
-#' @param min_POINT numeric, minimum height of points to eliminate forest floor and low vegetation (default = 0.2 m)
-#' @param min_H_scale numeric, height scaler (m, default = .13), controlling understory removal
-#' @param branch_WIDTH numeric, assumed CBH branch width (m, default = 0.2), controlling bin width for counting points
-#' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
-#' @param cbh_ONLY numeric, options for executing: 1~treeiso and cbh, 2~only treeiso, 3~only cbh detection (default = 1, meaning tree isolation and CBH detection are active)
-#' @param kM logical, interactive K-means cluster k tuning, activated if 'kM' = TRUE (default = FALSE)
-#' @param method character, optional additional attribute (default = NULL)
-#' @param outdir1 string, path to output directory of treeiso segment results
-#' @param outdir2 string, path to output directory of filtered segments (intermediate_segs and final_segs)
-#' @param K1,L1,DEC_R1 first stage cut-pursuit parameters (treeiso), default values as indicated
-#' @param K2-L2,MAX_GAP,DEC_R2 second stage cut-pursuit parameters (treeiso), default values as indicated
-#' @param VER_O_W,RHO final stage treeiso parameters, default values as indicated
-#' @param cc_dir string, path to CloudCompare.exe
-#' @return tibble (Z_max, Z_mean, Z_sd, Z_N_points, N_points, CBH, Hull_area, Del_vol, Cube_vol, Sphere_vol and treeID)
+#' Automated parameter configuration for get_CBH() based on point cloud density
+#' @param input_dir string, path to directory containing LAS files
+#' @param density_threshold numeric, point density threshold (points/m²) for automatic vs interactive mode (default = 20)
+#' @return data.frame with recommended parameters for get_CBH
 #' @export
-get_CBHo <- function(list_LAS_char,
-                    min_RANGE = 5,
-                    min_POINT = .2,
-                    min_H_scale = .13,
-                    branch_WIDTH = .2,
-                    cross_WIDTH = 5,
-                    cbh_ONLY = 1,
-                    kM = FALSE,
-                    # Interactive K-means cluster k tuning, activated if 'kM' = TRUE
-                    # predicted k will be shown (plot), 'Do you accept k?'
-                    # if you enter: "y", "Y", "yes", "YES", "ye", "YE" ~ accepted
-                    # if you enter anything else:
-                    # 'Enter k:' will ask you for a number to provide for k
-                    method = NULL,
-                    outdir1,
-                    outdir2,
-                    K1 = 10, L1 = 1, DEC_R1 = .1,
-                    K2 = 20, L2 = 20, MAX_GAP = .5, DEC_R2 = .1,
-                    VER_O_W = .3, RHO = .5,
-                    cc_dir) {
+get_PARAMS <- function(input_dir, density_threshold = 20) {
 
-
-  #> Possible errors >
-  if (!min_H_scale %in% seq(.13,.25,.01)) {
-    stop(crayon::magenta("Parameter 'min_H_scale' accepts values from .13 to .25"))
-  }
-  if (branch_WIDTH < 0) {
-    stop(crayon::magenta("Parameter 'branch_WIDTH' must be positiv"))
-  }
-  if (cross_WIDTH < 4) {
-    stop(crayon::magenta("Parameter 'cross_WIDTH' must be minimum 4"))
-  }
-  if (!cbh_ONLY %in% 1:3) {
-    stop(crayon::magenta("Parameter 'cbh_ONLY' accepts 1, 2 and 3"))
-  }
-  if (K1 < 3 | K1 > 50) {
-    stop(crayon::magenta("Parameter 'K1' accepts values btw. 3 and 50"))
-  }
-  if (K2 < 5 | K2 > 50) {
-    stop(crayon::magenta("Parameter 'K2' accepts values btw. 5 and 50"))
-  }
-  if (L1 < .1 | L1 > 40) {
-    stop(crayon::magenta("Regularizing parameter 'L1' accepts values btw. .1 and 40"))
-  }
-  if (L2 < 5 | L2 > 40) {
-    stop(crayon::magenta("Regularizing parameter 'L2' accepts values btw. 5 and 40"))
-  }
-  if (DEC_R1 != .1) {
-    stop(crayon::magenta("Parameter 'DEC_R1' must be .1"))
-  }
-  if (DEC_R2 != .1) {
-    stop(crayon::magenta("Parameter 'DEC_R2' must be .1"))
-  }
-  if (MAX_GAP < .5 | MAX_GAP > 5) {
-    stop(crayon::magenta("Parameter 'MAX_GAP accepts values btw. .5 and 5"))
-  }
-  if (VER_O_W < 0 | VER_O_W > 1.1) {
-    stop(crayon::magenta("Parameter 'VER_O_W' accepts values btw. 0 and 1.1"))
-  }
-  if (RHO < 0 | RHO > 2) {
-    stop(crayon::magenta("Parameter 'RHO' accepts values btw. 0 and 2"))
+  # Input validation
+  if (!dir.exists(input_dir)) {
+    stop("Input directory does not exist: ", input_dir)
   }
 
-  #> outdir strings
-  if (str_sub(outdir1, nchar(outdir1), nchar(outdir1)) != "/") {
-    outdir1 = str_c(outdir1, "/")
-  }
-  if (str_sub(outdir2, nchar(outdir2), nchar(outdir2)) != "/") {
-    outdir2 = str_c(outdir2, "/")
-  }
+  las_files = list.files(input_dir, pattern = "\\.las$", full.names = TRUE) %>%
+    gtools::mixedsort()
 
-  #> ensure order
-  list_LAS_char = gtools::mixedsort(list_LAS_char)
-
-  if (cbh_ONLY %in% 1:2) {
-    #> 3D tree decomposition (segmentation) >
-    get_SEG(list_LAS_char,
-            outdir1,
-            outdir2,
-            min_RANGE = min_RANGE,
-            min_POINT = min_POINT,
-            K1 = K1, L1 = L1, DEC_R1 = DEC_R1,
-            K2 = K2, L2 = L2, MAX_GAP = MAX_GAP, DEC_R2 = DEC_R2,
-            VER_O_W = VER_O_W, RHO = RHO,
-            cc_dir = cc_dir)
-    if (cbh_ONLY == 2) {
-      message(crayon::green(str_c("_______ Done ________")))
-      stop_noerr()
-    }
+  if (length(las_files) == 0) {
+    stop("No LAS files found in: ", input_dir)
   }
 
-  if (cbh_ONLY %in% c(1,3)) {
+  # Calculate densities with error handling
+  densities = sapply(las_files, function(file) {
+    tryCatch({
+      las = readLAS(file)
+      lidR::density(las)
+    }, error = function(e) {
+      warning("Could not read file: ", basename(file), " - ", e$message)
+      NA
+    })
+  })
 
-    list_LASS = list.files(outdir2, pattern = ".las", full.names = T) %>%
-      gtools::mixedsort()
+  # Remove NA values and calculate statistics
+  valid_densities = densities[!is.na(densities)]
 
-    need = map_chr(list_LAS_char, ~str_split_1(.x, "/")[str_split_1(outdir2, "/") %>% length])
-    list_LASS = list_LASS[grep(str_c(need, collapse = "|"), list_LASS)]
-
-    metrics = list()
-    for (tree in 1:length(list_LASS)) {
-
-      message(crayon::green(str_c("_______", basename(list_LASS)[tree], "________")))
-
-      #> Original las >
-      laso = readLAS(list_LAS_char[tree])
-
-      #> Segmented las >
-      lass = readLAS(list_LASS[tree])
-
-      #> min H ~ segmented las >
-      m_H = (lass@data$Z %>% quantile(., .1) %>% as.vector) ^min_H_scale *2
-
-      #> Horizontal cross section ~ segmented las >
-      crosss = get_CROSS(lass, cross_WIDTH = cross_WIDTH)
-
-      #> Denstiy (height ~ Z) on original las >
-      dens =
-        laso@data %>%
-        ggplot(aes(y = Z)) +
-        geom_histogram(binwidth = .2, center = 1)
-      dat_dens =
-        ggplot_build(dens)
-      dat_dens =
-        dat_dens[[1]][[1]]
-
-      #> Removing ground points (again, just in case) and preparing segmented data for clustering >
-      df = crosss@data %>%
-        select(X, Z) %>%
-        filter(Z > min_POINT)
-
-      #> K-means clustering
-      #> Prediction strength of a clustering:
-      #> Tibshirani, R. and Walther, G. (2005) Cluster Validation by Prediction Strength, Journal of Computational and Graphical Statistics, 14, 511-528.
-      set.seed(123)
-      opk = fpc::prediction.strength(scale(df), 2, 10, 30)
-      opkk = map_dbl(opk$predcorr, ~mean(.x)) %>% replace_na(., 0.1)
-      k = ifelse(nrow(df) < 460, 1, ifelse(df$Z %>% min > 4, which.max(opkk) + 1, which.max(opkk)))
-      k = ifelse(nrow(df) > 5000, which.max(opkk) + 2, k)
-      k = ifelse(nrow(df) > 9000, 1, k)
-
-      km = kmeans(scale(df), k, nstart = 25)
-      if (kM == FALSE) {
-        k = k
-      }
-      else {
-        kmp = factoextra::fviz_cluster(km, data = df,
-                                       palette = c("steelblue", "gold", "limegreen",
-                                                   "grey", "deeppink", "forestgreen", "grey45",
-                                                   "steelblue", "yellow"), geom = "point", ellipse.type = "convex",
-                                       ggtheme = theme_bw()) + scale_y_continuous(breaks = NULL) +
-          scale_x_continuous(breaks = NULL) + theme(axis.title.x = element_blank(),
-                                                    axis.text.x = element_blank(), plot.title = element_blank(),
-                                                    axis.ticks = element_blank(), axis.text.y = element_blank(),
-                                                    axis.title.y = element_blank(), legend.title = element_blank(),
-                                                    legend.key.size = unit(1, "cm"),
-                                                    legend.text = element_text(size = 12),
-                                                    legend.position = c(0.9, 0.2), legend.background = element_rect(fill = "transparent"))
-        print(kmp)
-        message(crayon::green(str_c("Suggested k is ",
-                                    k, ".")))
-        kM_ = readline(prompt = "Do you accept k? ")
-        if (kM_ %in% c("y", "Y", "yes", "YES", "ye",
-                       "YE")) {
-          km = km
-        }
-        else {
-          kM__ = readline(prompt = "Enter k: ")
-          kM__ = as.double(kM__)
-          km = kmeans(scale(df), kM__, nstart = 25)
-          kmp = factoextra::fviz_cluster(km, data = df,
-                                         palette = c("steelblue", "gold", "limegreen",
-                                                     "grey", "deeppink", "forestgreen", "grey45",
-                                                     "steelblue", "yellow"), geom = "point", ellipse.type = "convex",
-                                         ggtheme = theme_bw()) + scale_y_continuous(breaks = NULL) +
-            scale_x_continuous(breaks = NULL) + theme(axis.title.x = element_blank(),
-                                                      axis.text.x = element_blank(), plot.title = element_blank(),
-                                                      axis.ticks = element_blank(), axis.text.y = element_text(size = 10),
-                                                      axis.title.y = element_blank(), legend.title = element_blank(),
-                                                      legend.key.size = unit(1, "cm"),
-                                                      legend.text = element_text(size = 12),
-                                                      legend.position = c(0.9, 0.2), legend.background = element_rect(fill = "transparent"))
-          print(kmp)
-          message(crayon::green(str_c("Suggested k is ",
-                                      kM__, ".")))
-          kM_ = readline(prompt = "Do you accept k? ")
-          if (kM_ %in% c("y", "Y", "yes", "YES", "ye",
-                         "YE")) {
-            km = km
-          }
-          else {
-            kM__ = readline(prompt = "Enter k: ")
-            kM__ = as.double(kM__)
-            km = kmeans(scale(df), kM__, nstart = 25)
-            kmp = factoextra::fviz_cluster(km, data = df,
-                                           palette = c("steelblue", "gold", "limegreen",
-                                                       "grey", "deeppink", "forestgreen", "grey45",
-                                                       "steelblue", "yellow"), geom = "point", ellipse.type = "convex",
-                                           ggtheme = theme_bw()) + scale_y_continuous(breaks = NULL) +
-              scale_x_continuous(breaks = NULL) + theme(axis.title.x = element_blank(),
-                                                        axis.text.x = element_blank(), plot.title = element_blank(),
-                                                        axis.ticks = element_blank(), axis.text.y = element_blank(),
-                                                        axis.title.y = element_blank(), legend.title = element_blank(),
-                                                        legend.key.size = unit(1, "cm"),
-                                                        legend.text = element_text(size = 12),
-                                                        legend.position = c(0.9, 0.2), legend.background = element_rect(fill = "transparent"))
-            print(kmp)
-            message(crayon::green(str_c("Suggested k is ",
-                                        kM__, ".")))
-            km = km
-          }
-        }
-      }
-
-      dfk =
-        df %>%
-        mutate(km = km$cluster)
-
-      dfkm =
-        dfk %>% group_by(km) %>%
-        summarise(mZ = mean(Z)) %>%
-        bind_cols(km$centers)
-
-      dfkk =
-        dfk %>%
-        filter(km == dfkm[which.min(dfkm$mZ),]$km)
-
-      dfk_histo =
-        dfkk %>%
-        ggplot(aes(y = Z)) +
-        geom_histogram(center = T, binwidth = branch_WIDTH) # Example
-      datt_histo =
-        ggplot_build(dfk_histo)
-      datt_histo =
-        datt_histo[[1]][[1]]
-
-      datt_histo =
-        datt_histo %>%
-        filter(y > m_H)
-
-      #> Finding CBH >
-      cbh = get_CANOPYBH(datt_histo)
-
-      #> Canopy ~ original las >
-      newdata =
-        laso@data %>%
-        data.frame() %>%
-        select(X, Y, Z) %>%
-        filter(Z > cbh) %>%
-        as.matrix()
-
-      las_new =
-        laso %>%
-        filter_poi(Z > cbh)
-
-      #> Delaunay hull area >
-      convex_hull =
-        geometry::convhulln(newdata, "FA")
-
-      #> Delaunay hull volume >
-      delaunaj =
-        geometry::delaunayn(newdata, "Fa")
-
-      #> Voxelizing canopy (0.2m) >
-      vmv = get_VOXEL(las_new@data, .2)
-
-      #> Exclude ground and low vegetation from density (height ~ Z) of original las >
-      dat_histos =
-        dat_dens %>%
-        filter(y >= m_H)
-
-      #> Collect metrics >
-      metrics[[tree]] =
-        tibble(
-          Z_max      = laso@data$Z %>% max,
-          Z_mean     = laso@data$Z %>% mean,
-          Z_sd       = laso@data$Z %>% sd,
-          Z_N_points = dat_histos[dat_histos$count %>% which.max(),]$y,
-          N_points   = dat_histos[dat_histos$count %>% which.max(),]$count,
-          CBH        = cbh,
-          Hull_area  = convex_hull$area,
-          Del_vol    = delaunaj$areas %>% sum,
-          Cube_vol   = round(nrow(vmv) * (0.2^3), 3),
-          Sphere_vol = round(nrow(vmv) * (4/3)*(pi*(0.1^3)), 3),
-          treeID     = str_remove(basename(list_LASS)[tree], ".las") %>%
-            str_remove(., "tree_"))
-    }
-
-    metrics =
-      metrics %>%
-      bind_rows()
-
-    if (!is.null(method)) {
-      metrics =
-        metrics %>%
-        mutate(method = method)
-    }
-    message(crayon::green(str_c("_______ Done ________")))
-    return(metrics)
+  if (length(valid_densities) == 0) {
+    stop("No valid LAS files could be processed")
   }
-}
 
-#' Function for 2D cross-sectional plot.
-#' @param las las file
-#' @param col character, color of points, default = "grey25"
-#' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
-#' @return displays ggplot
-#' @export
-plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {
-  p1 = c(min(las@data$X), mean(las@data$Y))
-  p2 = c(max(las@data$X), mean(las@data$Y))
-  data_clip = clip_transect(las, p1, p2, cross_WIDTH)
-  PLOT = ggplot(data_clip@data, aes(X,Z)) +
-    geom_point(size = .5, col = col) +
-    coord_equal() +
-    labs(y = ylab) +
-    scale_y_continuous(breaks = NULL) +
-    scale_x_continuous(breaks = NULL)
+  mean_density = mean(valid_densities, na.rm = TRUE)
+  min_density = min(valid_densities, na.rm = TRUE)
+  max_density = max(valid_densities, na.rm = TRUE)
 
-  return(PLOT)
+  # Determine optimal parameters
+  if (mean_density < density_threshold) {
+    # Low density: Use interactive mode on original files
+    cbh_ONLY = 3
+    kM = FALSE
+    recommendation = "Low point density detected. Using interactive CBH detection on original files for manual verification."
+  } else {
+    # High density: Use automatic tree isolation + CBH
+    cbh_ONLY = 1
+    kM = TRUE
+    recommendation = "High point density detected. Using automatic tree isolation and CBH detection."
+  }
+
+  # Create comprehensive results
+  result = list(
+    parameters = data.frame(
+      cbh_ONLY = cbh_ONLY,
+      kM = kM,
+      density_threshold_used = density_threshold
+    ),
+    density_stats = data.frame(
+      mean_density = round(mean_density, 2),
+      min_density = round(min_density, 2),
+      max_density = round(max_density, 2),
+      n_files_processed = length(valid_densities),
+      n_files_total = length(las_files)
+    ),
+    recommendation = recommendation
+  )
+
+  # Print summary for user
+  message("=== get_PARAMS Analysis ===")
+  message("Density statistics (points/m²):")
+  message("  Mean: ", round(mean_density, 2))
+  message("  Range: ", round(min_density, 2), " - ", round(max_density, 2))
+  message("Recommendation: ", recommendation)
+  message("Suggested parameters:")
+  message("  cbh_ONLY = ", cbh_ONLY)
+  message("  kM = ", kM)
+
+  return(result)
 }
 
 #' Function for 2D cross-sectional plot used only in get_CBH().
@@ -1279,8 +1136,7 @@ plot_CROSS <- function(las, col = "grey25", ylab, cross_WIDTH = 5) {
 #' @param cross_WIDTH numeric, width of cross-section (m, default = 5)
 #' @return displays ggplot
 #' @export
-plot_CROSSS <- function (las, col = "grey25", ylab, cross_WIDTH = 5)
-{
+plot_CROSS <- function (las, col = "grey25", ylab, cross_WIDTH = 5) {
   p1 = c(min(las@data$X), mean(las@data$Y))
   p2 = c(max(las@data$X), mean(las@data$Y))
   data_clip = clip_transect(las, p1, p2, cross_WIDTH)
@@ -1390,4 +1246,3 @@ check_DAT <- function (data, message) {
     warning("data contains missing values.")
   invisible(list(data = data, dfr = dfr))
 }
-

@@ -2,7 +2,7 @@
 % Please edit documentation in R/treecbh.R
 \name{plot_CROSS}
 \alias{plot_CROSS}
-\title{Function for 2D cross-sectional plot.}
+\title{Function for 2D cross-sectional plot used only in get_CBH().}
 \usage{
 plot_CROSS(las, col = "grey25", ylab, cross_WIDTH = 5)
 }
@@ -17,5 +17,5 @@ plot_CROSS(las, col = "grey25", ylab, cross_WIDTH = 5)
 displays ggplot
 }
 \description{
-Function for 2D cross-sectional plot.
+Function for 2D cross-sectional plot used only in get_CBH().
 }

@@ -19,7 +19,7 @@ Individual tree segmentation must be conducted prior. The package is meant to be
 
 - **R** version 4.0.0 or higher
 - **CloudCompare** (for tree isolation functionality)
-- **Recommended**: 8GB+ RAM for processing large point clouds
+- **Recommended**: 16GB+ RAM for processing large point clouds
 
 ## Required packages
 

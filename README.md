@@ -105,8 +105,11 @@ O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           kM = params$parameters$kM)
 ```
 User R Console interaction:
+
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_table.png">
+
 User R Plots with R Console interaction:
+
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_02.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_03.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_04.png">

@@ -129,6 +129,8 @@ O_CBH
 ```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
 
+Two other modes of **get_CBH()**
+
 ```r
 # 2) Optimization deactivated, executing treeiso only (PRE-PROCESSING step!) 
 # Sensible above 20 points/m², it skips las trees with smaller than 20 points/point cloud (4-7 points/m²)

@@ -27,7 +27,6 @@ tidyverse, lidR, RCSF, sf, data.table, crayon, fpc, geometry, gtools
 ```r
 devtools::install_github("DijoG/treecbh")
 ```
-
 ## Example
 This demonstration uses low point-density data shows how to use **treecbh** combined with **lidR**. 
 
@@ -48,45 +47,37 @@ bgcol <- function(x)
 }
 ```
 Computing canopy height model using the pitfree algorithm.
-
 ```r
 CHM <- lidR::rasterize_canopy(Alas, 0.5, pitfree(subcircle = 0.25))
 plot(CHM, main = "CHM 0.5 pitfree", col = bgcol(50))
 ```
-
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/01_chm_pitfree.png">
 
 Computing treetops using a constant windows size of 5 m.
-
 ```r
 ws <- 5
 treetops <- lidR::locate_trees(CHM, lmf(ws))
 plot(CHM, main = "CHM 0.5 pitfree", col = bgcol(50))
 plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 ```
-
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/02_chm_pitfree_treetops.png">
 
 Point-based crown segmentation using the Dalponte algorithm.
-
 ```r
 algo_crowns <- lidR::dalponte2016(CHM, treetops)
 las_crowns <- lidR::segment_trees(Alas, algo_crowns, attribute = "ID")
 ```
 Obtaining Individual Tree Segments (ITS) as polygons.
-
 ```r
 ITS <- lidR::crown_metrics(las_crowns, attribute = "ID", geom = "concave", func = NULL)
 plot(sf::st_geometry(ITS), reset = FALSE, col = "forestgreen", border = "grey80")
 plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 ```
-
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/03_its_treetops.png">
 
 Some trees were not segmented.
 
 Extracting tree point clouds to ITS (classifying ground points and saving tree point cloud files by default).
-
 ```r
 oudir <- "<path/to/directory>"
 treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
@@ -114,22 +105,21 @@ O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           kM = params$parameters$kM)
 ```
 User R Console interaction:
-
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_table.png">
+
+User R Plots with R Console interaction:
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_02.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_03.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_04.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_05.png">
 
 Let's check O_CBH:
-
 ```r
 O_CBH
 ```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
 
 Two other modes of **get_CBH()**
-
 ```r
 # 2) Optimization deactivated (cbh_ONLY = 2): executing treeiso only (PRE-PROCESSING step!) 
 # SENSIBLE above 20 points/m², it skips input points clouds with smaller than 20 points/point cloud (4-7 points/m²)

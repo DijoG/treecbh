@@ -5,9 +5,9 @@
 [![R](https://img.shields.io/badge/R-%3E%3D%204.0.0-blue.svg)](https://www.r-project.org/)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 
-The **treecbh** package provides functions to detect individual tree level Crown Base Height (CBH) using high-resolution LiDAR data. 
+The `**treecbh**` package provides functions to detect individual tree level Crown Base Height (CBH) using high-resolution LiDAR data. 
 
-Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the **lidR** package. 
+Individual tree segmentation must be conducted prior. The package is meant to be used within the framework of the `lidR` package. 
 
 ***Update (29.10.2025):*** Cumulative percentile-based density method implemented instead of the original kernel density approach.
 
@@ -23,7 +23,7 @@ Individual tree segmentation must be conducted prior. The package is meant to be
 
 ## Required packages
 
-tidyverse, lidR, RCSF, sf, data.table, crayon, fpc, geometry, gtools
+`dplyr`, `lidR`, `RCSF`, `sf`, `data.table`, `crayon`, `fpc`, `geometry`, `gtools`
 
 ## Installation
 
@@ -31,7 +31,7 @@ tidyverse, lidR, RCSF, sf, data.table, crayon, fpc, geometry, gtools
 devtools::install_github("DijoG/treecbh")
 ```
 ## Example
-This demonstration uses low point-density data and shows how to use **treecbh** combined with **lidR**. 
+This demonstration uses low point-density data and shows how to use `**treecbh**` combined with `lidR`. 
 
 ### Data preparation
 
@@ -121,13 +121,13 @@ Simultaneous R Plots with R Console interaction:
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_004.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_005.png">
 
-Let's check O_CBH.
+Let's check `O_CBH`.
 ```r
 O_CBH
 ```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
 
-Two other modes of **get_CBH()**.
+Two other modes of `get_CBH()`.
 ```r
 # 2) Optimization deactivated (cbh_ONLY = 2): executing treeiso only (PRE-PROCESSING step!) 
 # SENSIBLE above 20 points/m², it skips input points clouds with smaller than 20 points/point cloud (4-7 points/m²)
@@ -153,7 +153,7 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           cc_dir = cc_dir)
 ```
 ## Citation
-If you use **treecbh** in your research please cite the original paper:
+If you use `**treecbh**` in your research please cite the original paper:
 *Testing treecbh in Central European forests: an R package for crown base height detection using high-resolution aerial laser-scanned data*
 
 https://doi.org/10.1093/forestry/cpae044
@@ -162,14 +162,14 @@ https://doi.org/10.1093/forestry/cpae044
 
   - "No ground points found" error
 
-    Solution: Ensure your point cloud includes ground points or set *normalize = FALSE* in *get_3DTREE()*
+    Solution: Ensure your point cloud includes ground points or set `normalize = FALSE` in `get_3DTREE()`
 
   - CloudCompare not found
 
-    Solution: Verify the path to CloudCompare.exe in the *cc_dir* parameter
+    Solution: Verify the path to CloudCompare.exe in the `cc_dir` parameter
 
   - Interactive mode gets stuck and/or "Cannot write a file with 0 point" error
 
-    Solution: Ensure input file point density sufficiency using *get_PARAMS()* (> 20 points/m²).
+    Solution: Ensure input file point density sufficiency using `get_PARAMS()` (> 20 points/m²).
     
 

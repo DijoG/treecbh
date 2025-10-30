@@ -139,7 +139,7 @@ O_CBH
   - `Cube_vol` Voxel-based volume estimate (0.2m resolution, if VOL = TRUE)
   - `Sphere_vol` Sphere-based volume estimate (if VOL = TRUE)
 
-### Other Modes of CBH Detection
+### Other Modes of `get_CBH()`
 ```r
 # 2) Optimization deactivated (cbh_ONLY = 2): executing treeiso only (PRE-PROCESSING step!) 
 # SENSIBLE above 20 points/m², it skips input points clouds with smaller than 20 points/point cloud (4-7 points/m²)

@@ -102,13 +102,16 @@ params <- treecbh::get_PARAMS(oudir)
 tictoc::toc()
 # 25.84 sec
 
-# Run
-# 1) Optimization activated (default cbh_ONLY = 3): executing cbh detection only
+params$parameters$cbh_ONLY # 1
+params$parameters$kM       # TRUE
+
+# Run default mode
+# 1) Optimization activated: executing cbh detection only
 O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           # Not necessary (default):
-                          cbh_ONLY = params$parameters$cbh_ONLY,
+                          cbh_ONLY = 3,
                           # Not necessary (default):
-                          kM = params$parameters$kM)
+                          kM = FALSE)
 ```
 User R Console interaction:
 
@@ -162,7 +165,8 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           outdir1 = outdi_treeiso,
                           outdir2 = outdi_filtered,
                           # Run both tree isolation and CBH detection:
-                          cbh_ONLY = 1,
+                          cbh_ONLY = params$parameters$cbh_ONLY,
+                          kM = params$parameters$kM,
                           cc_dir = cc_dir)
 ```
 ## Citation

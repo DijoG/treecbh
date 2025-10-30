@@ -21,7 +21,7 @@ Individual tree segmentation must be conducted prior. The package is meant to be
 - **CloudCompare** (for tree isolation functionality)
 - **Recommended**: 16GB+ RAM for processing large point clouds
 
-## Required packages
+## Dependencies
 
 `dplyr`, `lidR`, `RCSF`, `sf`, `data.table`, `crayon`, `fpc`, `geometry`, `gtools`
 
@@ -121,13 +121,25 @@ Simultaneous R Plots with R Console interaction:
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_004.png">
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_005.png">
 
-Let's check `O_CBH`.
+### Output
 ```r
 O_CBH
 ```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
 
-Two other modes of `get_CBH()`.
+  - `Z_max`	Maximum height of the tree (m)
+  - `Z_mean` Mean height of all points (m)
+  - `Z_sd` Standard deviation of point heights (m)
+  - `Z_N_points` Height with maximum point density (m)
+  - `N_points` Number of points at the most frequent height bin (0.2m binwidth)
+  - `CBH`	Detected Crown Base Height (m)
+  - `treeID` Tree identifier from the input filename
+  - `Hull_area`	Convex hull area of points above CBH (m², if VOL = TRUE)
+  - `Del_vol`	Delaunay triangulation volume above CBH (m³, if VOL = TRUE)
+  - `Cube_vol` Voxel-based volume estimate (0.2m resolution, if VOL = TRUE)
+  - `Sphere_vol` Sphere-based volume estimate (if VOL = TRUE)
+
+### Other Modes of CBH Detection
 ```r
 # 2) Optimization deactivated (cbh_ONLY = 2): executing treeiso only (PRE-PROCESSING step!) 
 # SENSIBLE above 20 points/m², it skips input points clouds with smaller than 20 points/point cloud (4-7 points/m²)

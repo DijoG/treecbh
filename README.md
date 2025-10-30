@@ -165,7 +165,7 @@ D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           cc_dir = cc_dir)
 ```
 ## Citation
-If you use ***treecbh*** in your research please cite the original paper:
+If you use ***treecbh*** in your research, please cite the original paper:
 *Testing treecbh in Central European forests: an R package for crown base height detection using high-resolution aerial laser-scanned data*
 
 https://doi.org/10.1093/forestry/cpae044

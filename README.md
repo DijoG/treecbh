@@ -113,7 +113,9 @@ O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
                           # Not necessary (default):
                           cbh_ONLY = 3,
                           # Not necessary (default):
-                          kM = FALSE)
+                          kM = FALSE,
+                          # Not necessary (default):
+                          VOL = FALSE)
 # Note: Defining 'outdir2' directs the function to use point clouds from that directory for CBH detection.
 ```
 User R Console interaction:

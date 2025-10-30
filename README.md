@@ -31,9 +31,10 @@ Individual tree segmentation must be conducted prior. The package is meant to be
 devtools::install_github("DijoG/treecbh")
 ```
 ## Example
-This demonstration uses low point-density data and shows how to use ***treecbh*** combined with `lidR`. 
 
 ### Data preparation
+
+This demonstration uses low point-density data and shows how to use ***treecbh*** combined with `lidR`.
 
 ```r
 require(lidR);require(dplyr)
@@ -88,7 +89,7 @@ treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
 
 ### CBH Detection 
 
-The following functions and their functionality apply to the usage of high point-density LiDAR data:
+The functionality of the following functions is demonstrated using five tree point cloud datasets with high point density.
 
 ```r
 # List las files
@@ -111,21 +112,21 @@ O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
 ```
 User R Console interaction:
 
-<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_table.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_UIAC.png">
 
 Simultaneous R Plots with R Console interaction:
 
-<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_001.png">
-<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_002.png">
-<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_003.png">
-<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_004.png">
-<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_005.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_UI01.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_UI02.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_UI03.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_UI04.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_UI05.png">
 
 ### Output
 ```r
 O_CBH
 ```
-<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_O_tableO.png">
+<img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_OUTPUT.png">
 
   - `Z_max`	Maximum height of the tree (m)
   - `Z_mean` Mean height of all points (m)

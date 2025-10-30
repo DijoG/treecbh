@@ -106,12 +106,15 @@ params$parameters$cbh_ONLY # 1
 params$parameters$kM       # TRUE
 
 # Run default mode
-# 1) Optimization activated: executing cbh detection only
+# 1) Optimization activated: executing user-defined cbh detection 
 O_CBH <- treecbh::get_CBH(list_LAS_char = las_l[1:5],
+                          # Not necessary (default):
+                          outdir2 = NULL,
                           # Not necessary (default):
                           cbh_ONLY = 3,
                           # Not necessary (default):
                           kM = FALSE)
+# Note: Defining 'outdir2' directs the function to use point clouds from that directory for CBH detection.
 ```
 User R Console interaction:
 
@@ -159,7 +162,7 @@ treecbh::get_CBH(list_LAS_char = las_l,
                  cbh_ONLY = 2,
                  cc_dir = cc_dir)
 
-# 3) Optimization deactivated (cbh_ONLY = 1): performing treeiso plus CBH detection
+# 3) Optimization deactivated (cbh_ONLY = 1): performing treeiso plus automatic CBH detection
 # EXECUTE ONLY if params$density_stats$mean_density > 20
 D_CBH <- treecbh::get_CBH(list_LAS_char = las_l,
                           outdir1 = outdi_treeiso,

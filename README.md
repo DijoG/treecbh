@@ -81,7 +81,7 @@ plot(sf::st_geometry(treetops), add = T, pch = "+", col = "firebrick3")
 
 *Note: Some trees were not segmented.*
 
-Extracting tree point clouds to ITS (classifying ground points and saving tree point cloud files by default).
+Extracting tree point clouds to ITS (classifying ground points and saving tree point clouds by default).
 ```r
 oudir <- "<path/to/directory>"
 treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
@@ -89,7 +89,7 @@ treecbh::get_3DTREE(Alas, ITS, output_dir = oudir, FEATURE= "ID")
 
 ### CBH Detection 
 
-The functionality of the following functions is demonstrated using five tree point cloud datasets with high point density.
+The functionality of the following functions is demonstrated using five tree point clouds with high point density.
 
 ```r
 # List las files
@@ -136,17 +136,17 @@ O_CBH
 ```
 <img align="bottom" src="https://raw.githubusercontent.com/DijoG/storage/main/README/treecbh_OUTPUT.png">
 
-  - `Z_max`	Maximum height of the tree (m)
+  - `Z_max`	Maximum height (m)
   - `Z_mean` Mean height of all points (m)
   - `Z_sd` Standard deviation of point heights (m)
   - `Z_N_points` Height with maximum point density (m)
   - `N_points` Number of points at the most frequent height bin (0.2m binwidth)
   - `CBH`	Detected Crown Base Height (m)
-  - `treeID` Tree identifier from the input filename
+  - `treeID` Tree identifier from input point clouds
   - `Hull_area`	Convex hull area of points above CBH (m², if VOL = TRUE)
   - `Del_vol`	Delaunay triangulation volume above CBH (m³, if VOL = TRUE)
-  - `Cube_vol` Voxel-based volume estimate (0.2m resolution, if VOL = TRUE)
-  - `Sphere_vol` Sphere-based volume estimate (if VOL = TRUE)
+  - `Cube_vol` Voxel-based volume estimate above CBH (m³ at 0.2m resolution, if VOL = TRUE)
+  - `Sphere_vol` Sphere-based volume estimate above CBH (m³, if VOL = TRUE)
 
 ### Other Modes of `get_CBH()`
 ```r
@@ -192,6 +192,6 @@ https://doi.org/10.1093/forestry/cpae044
 
   - Interactive mode gets stuck and/or "Cannot write a file with 0 point" error
 
-    Solution: Ensure input file point density sufficiency using `get_PARAMS()` (> 20 points/m²).
+    Solution: Ensure input files' point density sufficiency using `get_PARAMS()` (> 20 points/m²).
     
 
